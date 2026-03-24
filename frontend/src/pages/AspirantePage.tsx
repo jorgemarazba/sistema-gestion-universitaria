@@ -12,7 +12,7 @@ export function AspirantePage() {
         <img
           src={HERO_IMG}
           alt="Estudiantes y aspirantes en campus universitario"
-          className="aspect-21/9 w-full max-h-[420px] object-cover"
+          className="aspect-21/9 w-full max-h-[420px object-cover"
         />
       </section>
 

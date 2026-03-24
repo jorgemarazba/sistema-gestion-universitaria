@@ -183,8 +183,7 @@ export function LoginPage() {
           </form>
 
           <p className="mt-6 text-center text-xs text-slate-500">
-            Autenticación segura con JWT (RV002). Los datos se validan contra
-            Supabase.
+            Autenticación segura Con tu correo Institucional
           </p>
         </div>
 
