@@ -42,7 +42,7 @@ export function LoginPage() {
       const { access_token, user } = response.data.data
       setAuth(access_token, user)
       alert(`¡Bienvenido ${user.nombre}!`)
-      navigate('/dashboard')
+      navigate('/admin/dashboard')
     } catch (err: unknown) {
       const axErr = err as { response?: { data?: { message?: string; error?: string | { message?: string } } } }
       const msg =

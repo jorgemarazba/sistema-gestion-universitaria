@@ -1,22 +1,34 @@
 import React from 'react';
-import { Link, useLocation, Outlet } from 'react-router-dom';
+import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   UserPlus, 
   Users, 
   BookOpen, 
   LogOut,
-  Settings // Ahora sí lo usaremos
+  Settings,
+  CreditCard,
+  Ticket,
+  BarChart3,
+  Bell
 } from 'lucide-react';
+import { useAuthStore } from '../../store/authStore';
 
 const AdminLayout: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const logout = useAuthStore((state) => state.logout);
 
   const menuItems = [
     { name: 'Dashboard', path: '/admin/dashboard', icon: <LayoutDashboard size={20} /> },
-    { name: 'Solicitudes', path: '/admin/solicitudes', icon: <UserPlus size={20} /> },
-    { name: 'Directorio', path: '/admin/usuarios', icon: <Users size={20} /> },
-    { name: 'Supervisión', path: '/admin/cursos', icon: <BookOpen size={20} /> },
+    { name: 'Usuarios', path: '/admin/usuarios', icon: <Users size={20} /> },
+    { name: 'Programas', path: '/admin/programas', icon: <BookOpen size={20} /> },
+    { name: 'Cursos', path: '/admin/cursos', icon: <BookOpen size={20} /> },
+    { name: 'Matriculas', path: '/admin/matriculas', icon: <UserPlus size={20} /> },
+    { name: 'Pagos', path: '/admin/pagos', icon: <CreditCard size={20} /> },
+    { name: 'Tickets', path: '/admin/tickets', icon: <Ticket size={20} /> },
+    { name: 'Reportes', path: '/admin/reportes', icon: <BarChart3 size={20} /> },
+    { name: 'Notificaciones', path: '/admin/notificaciones', icon: <Bell size={20} /> },
   ];
 
   return (
@@ -49,13 +61,23 @@ const AdminLayout: React.FC = () => {
 
         {/* FOOTER DEL SIDEBAR */}
         <div className="p-4 border-t border-slate-800 space-y-2">
-          {/* USANDO SETTINGS AQUÍ PARA QUITAR EL ERROR */}
-          <button className="flex items-center gap-3 px-4 py-3 w-full text-slate-400 hover:text-white transition rounded-lg hover:bg-slate-800">
+          {/* BOTÓN CONFIGURACIÓN */}
+          <button 
+            onClick={() => navigate('/admin/settings')}
+            className="flex items-center gap-3 px-4 py-3 w-full text-slate-400 hover:text-white transition rounded-lg hover:bg-slate-800"
+          >
             <Settings size={20} />
             <span className="text-sm font-medium">Configuración</span>
           </button>
 
-          <button className="flex items-center gap-3 px-4 py-3 w-full text-red-400 hover:bg-red-500/10 transition rounded-lg">
+          {/* BOTÓN CERRAR SESIÓN */}
+          <button 
+            onClick={() => {
+              logout();
+              navigate('/login');
+            }}
+            className="flex items-center gap-3 px-4 py-3 w-full text-red-400 hover:bg-red-500/10 transition rounded-lg"
+          >
             <LogOut size={20} />
             <span className="text-sm font-semibold">Cerrar Sesión</span>
           </button>
@@ -68,8 +90,8 @@ const AdminLayout: React.FC = () => {
            <div className="h-8 w-8 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold">A</div>
         </header>
 
-        <section className="flex-1 overflow-y-auto bg-gray-50 p-6">
-          <div className="max-w-7xl mx-auto">
+        <section className="flex-1 overflow-y-auto p-6">
+          <div className="max-w-7xl mx-auto h-full">
             <Outlet /> 
           </div>
         </section>

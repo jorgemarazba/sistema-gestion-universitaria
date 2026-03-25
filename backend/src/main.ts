@@ -1,4 +1,5 @@
 import { NestFactory } from '@nestjs/core';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
@@ -7,35 +8,55 @@ import helmet from 'helmet'; // Importante para Seguridad RV035
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
   // 1. Seguridad de Cabeceras (RV035)
   app.use(helmet());
 
   // 2. Configuración de CORS para que el Frontend pueda hablar con el Backend
   app.enableCors({
-    origin: 'http://localhost:5173', // La URL por defecto de Vite
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    origin: [
+      'http://localhost:5173',
+      'http://localhost:5174',
+      'http://localhost:3000',
+      'http://127.0.0.1:5173',
+      'http://127.0.0.1:5174',
+    ],
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
+    allowedHeaders: 'Content-Type,Authorization',
   });
 
-  // 3. Registrar el Filtro Global de Errores (Lo que creamos en common/filters)
+  // 3. Prefijo global para todas las rutas
+  app.setGlobalPrefix('api/v1');
+
+  // 4. Registrar el Filtro Global de Errores
   app.useGlobalFilters(new AllExceptionsFilter());
 
-  // 4. Registrar el Interceptor Global (Lo que creamos en common/interceptors)
+  // 5. Registrar el Interceptor Global
   app.useGlobalInterceptors(new TransformInterceptor());
 
-  // 5. Configuración de Validación Global (RV001)
+  // 6. Configuración de Validación Global
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: true, // Borra datos que no estén en el DTO
-      forbidNonWhitelisted: true, // Lanza error si envían datos de más
-      transform: true, // Convierte los tipos automáticamente
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
     }),
   );
 
-  // 6. Prefijo global para todas las rutas (opcional pero profesional)
-  app.setGlobalPrefix('api/v1');
+  // 7. Configurar Swagger DESPUÉS de setGlobalPrefix
+  const config = new DocumentBuilder()
+    .setTitle('Plataforma Educativa')
+    .setDescription('API para gestión administrativa y académica')
+    .setVersion('1.0')
+    .addBearerAuth()
+    .build();
+
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api/docs', app, document);
 
   await app.listen(3000);
-  console.log('🚀 Backend corriendo en: http://localhost:3000/api/v1');
+  console.log(' Servidor corriendo en: http://localhost:3000');
+  console.log(' Documentación en: http://localhost:3000/api/docs');
 }
 void bootstrap();

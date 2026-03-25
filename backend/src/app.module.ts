@@ -26,7 +26,6 @@ import { AuthModule } from './auth/auth.module';
           ssl: {
             rejectUnauthorized: false,
           },
-          prepareThreshold: 0,
         },
       }),
     }),

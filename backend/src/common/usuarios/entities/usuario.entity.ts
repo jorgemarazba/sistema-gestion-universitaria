@@ -37,6 +37,12 @@ export class Usuario {
   @Column({ name: 'motivo_solicitud', nullable: true })
   motivoSolicitud: string;
 
+  @Column({ name: 'motivo_rechazo', type: 'text', nullable: true })
+  motivoRechazo: string;
+
   @CreateDateColumn({ name: 'fecha_registro' })
   fechaRegistro: Date;
+
+  @Column({ name: 'fecha_aprobacion', type: 'timestamp', nullable: true })
+  fechaAprobacion: Date;
 }
