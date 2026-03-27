@@ -132,29 +132,44 @@ export const AdminDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-50 to-slate-100 p-6 space-y-6 animate-fadeIn">
+    <div className="min-h-screen p-6 space-y-6 animate-fadeIn"
+      style={{
+        backgroundColor: '#0f172a',
+        backgroundImage: `
+          linear-gradient(30deg, rgba(56, 189, 248, 0.1) 12%, transparent 12.5%, transparent 87%, rgba(56, 189, 248, 0.1) 87.5%, rgba(56, 189, 248, 0.1)),
+          linear-gradient(150deg, rgba(56, 189, 248, 0.1) 12%, transparent 12.5%, transparent 87%, rgba(56, 189, 248, 0.1) 87.5%, rgba(56, 189, 248, 0.1)),
+          linear-gradient(30deg, rgba(56, 189, 248, 0.1) 12%, transparent 12.5%, transparent 87%, rgba(56, 189, 248, 0.1) 87.5%, rgba(56, 189, 248, 0.1)),
+          linear-gradient(150deg, rgba(56, 189, 248, 0.1) 12%, transparent 12.5%, transparent 87%, rgba(56, 189, 248, 0.1) 87.5%, rgba(56, 189, 248, 0.1)),
+          linear-gradient(60deg, rgba(30, 58, 138, 0.2) 25%, transparent 25.5%, transparent 75%, rgba(30, 58, 138, 0.2) 75%, rgba(30, 58, 138, 0.2)),
+          linear-gradient(60deg, rgba(30, 58, 138, 0.2) 25%, transparent 25.5%, transparent 75%, rgba(30, 58, 138, 0.2) 75%, rgba(30, 58, 138, 0.2)),
+          linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #0f172a 100%)
+        `,
+        backgroundSize: '80px 140px, 80px 140px, 80px 140px, 80px 140px, 80px 140px, 80px 140px, 100% 100%',
+        backgroundPosition: '0 0, 0 0, 40px 70px, 40px 70px, 0 0, 40px 70px, 0 0',
+      }}
+    >
       {/* Header */}
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold" style={{ color: '#000000' }}>Dashboard General</h1>
-        <p className="text-sm text-slate-800 font-medium">Última actualización: Ahora</p>
+        <h1 className="text-3xl font-bold text-black">Dashboard General</h1>
+        <p className="text-sm text-white font-medium">Última actualización: Ahora</p>
       </div>
 
       {/* Distribución de Roles */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-          <h2 className="text-lg font-bold mb-4" style={{ color: '#000000' }}>Distribución de Usuarios</h2>
+        <div className="lg:col-span-2 bg-[#374151] p-6 rounded-xl shadow-lg border border-gray-600">
+          <h2 className="text-lg font-bold mb-4 text-white">Distribución de Usuarios</h2>
           <div className="space-y-4">
             {roleDistribution.length > 0 ? (
               roleDistribution.map((role, index) => {
                 const percentage = getPercentage(role.count);
-                const colors = ['bg-indigo-600', 'bg-emerald-500', 'bg-amber-500'];
+                const colors = ['bg-blue-600', 'bg-sky-500', 'bg-amber-500'];
                 const labelColor = index === 0 ? 'Estudiantes' : index === 1 ? 'Profesores' : 'Administradores';
 
                 return (
                   <div key={role.role}>
                     <div className="flex justify-between mb-1">
-                      <p className="text-sm text-slate-700 font-medium">{labelColor || role.role} ({percentage}%)</p>
-                      <span className="text-sm font-bold text-slate-700">{role.count}</span>
+                      <p className="text-sm text-gray-300 font-medium">{labelColor || role.role} ({percentage}%)</p>
+                      <span className="text-sm font-bold text-white">{role.count}</span>
                     </div>
                     <div className="w-full bg-slate-100 rounded-full h-2">
                       <div
@@ -166,14 +181,14 @@ export const AdminDashboard = () => {
                 );
               })
             ) : (
-              <p className="text-slate-800 text-sm font-medium">No hay datos de distribución</p>
+              <p className="text-gray-400 text-sm font-medium">No hay datos de distribución</p>
             )}
           </div>
         </div>
 
         {/* Actividad Crítica */}
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-          <h2 className="text-lg font-bold mb-4" style={{ color: '#000000' }}>Actividad Crítica</h2>
+        <div className="bg-[#374151] p-6 rounded-xl shadow-lg border border-gray-600">
+          <h2 className="text-lg font-bold mb-4 text-white">Actividad Crítica</h2>
           <div className="flow-root">
             <ul className="-mb-8">
               <li className="relative pb-8">
@@ -182,8 +197,8 @@ export const AdminDashboard = () => {
                     <CheckCircle size={16} />
                   </div>
                   <div className="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
-                    <p className="text-sm text-black font-medium">Usuarios activos: <span className="font-bold text-black">{stats?.activeUsers ?? 0}</span></p>
-                    <span className="text-xs text-black font-medium">En vivo</span>
+                    <p className="text-sm text-gray-300 font-medium">Usuarios activos: <span className="font-bold text-white">{stats?.activeUsers ?? 0}</span></p>
+                    <span className="text-xs text-gray-400 font-medium">En vivo</span>
                   </div>
                 </div>
               </li>
@@ -193,8 +208,8 @@ export const AdminDashboard = () => {
                     <Clock size={16} />
                   </div>
                   <div className="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
-                    <p className="text-sm text-black font-medium">Solicitudes en espera: <span className="font-bold text-black">{stats?.pendingRequests ?? 0}</span></p>
-                    <span className="text-xs text-black font-medium">Pendiente</span>
+                    <p className="text-sm text-gray-300 font-medium">Solicitudes en espera: <span className="font-bold text-white">{stats?.pendingRequests ?? 0}</span></p>
+                    <span className="text-xs text-gray-400 font-medium">Pendiente</span>
                   </div>
                 </div>
               </li>
@@ -212,21 +227,21 @@ export const AdminDashboard = () => {
       {/* Usuarios Recientes y Tickets Recientes */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Usuarios Recientes */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-[#374151] rounded-lg shadow-lg border border-gray-600 p-6">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-lg font-bold mb-6" style={{ color: '#000000' }}>Usuarios Recientes</h2>
-            <a href="/admin/usuarios" className="text-blue-600 text-sm font-semibold hover:text-blue-800">Ver todos</a>
+            <h2 className="text-lg font-bold text-white">Usuarios Recientes</h2>
+            <a href="/admin/usuarios" className="text-blue-400 text-sm font-semibold hover:text-blue-300">Ver todos</a>
           </div>
           <div className="space-y-4">
             {usuariosRecientesData.map((usuario) => (
               <div key={usuario.id} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                  <div className="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
                     {usuario.initials}
                   </div>
                   <div>
-                    <p className="font-semibold text-black text-sm">{usuario.nombre}</p>
-                    <p className="text-black text-xs">{usuario.email}</p>
+                    <p className="font-semibold text-white text-sm">{usuario.nombre}</p>
+                    <p className="text-gray-400 text-xs">{usuario.email}</p>
                   </div>
                 </div>
                 <span className={`text-xs font-semibold px-3 py-1 rounded-full ${getEstadoColor(usuario.estado)}`}>
@@ -238,21 +253,21 @@ export const AdminDashboard = () => {
         </div>
 
         {/* Tickets Recientes */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-[#374151] rounded-lg shadow-lg border border-gray-600 p-6">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-lg font-bold mb-6" style={{ color: '#000000' }}>Tickets Recientes</h2>
-            <a href="/admin/tickets" className="text-blue-600 text-sm font-semibold hover:text-blue-800">Ver todos</a>
+            <h2 className="text-lg font-bold text-white">Tickets Recientes</h2>
+            <a href="/admin/tickets" className="text-blue-400 text-sm font-semibold hover:text-blue-300">Ver todos</a>
           </div>
           <div className="space-y-4">
             {ticketsRecientesData.map((ticket) => (
               <div key={ticket.id} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                  <div className="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
                     {ticket.initials}
                   </div>
                   <div>
-                    <p className="font-semibold text-black text-sm">{ticket.nombre}</p>
-                    <p className="text-black text-xs">{ticket.problema}</p>
+                    <p className="font-semibold text-white text-sm">{ticket.nombre}</p>
+                    <p className="text-gray-400 text-xs">{ticket.problema}</p>
                   </div>
                 </div>
                 <span className={`text-xs font-semibold px-3 py-1 rounded-full ${getTicketEstadoColor(ticket.estado)}`}>
@@ -265,34 +280,34 @@ export const AdminDashboard = () => {
       </div>
 
       {/* Pagos Pendientes */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="bg-[#374151] rounded-lg shadow-lg border border-gray-600 p-6">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-lg font-bold mb-6" style={{ color: '#000000' }}>Pagos Pendientes</h2>
-          <a href="/admin/pagos" className="text-blue-600 text-sm font-semibold hover:text-blue-800">Ver todos</a>
+          <h2 className="text-lg font-bold text-white">Pagos Pendientes</h2>
+          <a href="/admin/pagos" className="text-blue-400 text-sm font-semibold hover:text-blue-300">Ver todos</a>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b-2 border-gray-200">
-                <th className="text-left text-xs font-semibold text-black uppercase py-3">Usuario</th>
-                <th className="text-left text-xs font-semibold text-black uppercase py-3">Concepto</th>
-                <th className="text-left text-xs font-semibold text-black uppercase py-3">Monto</th>
-                <th className="text-left text-xs font-semibold text-black uppercase py-3">Estado</th>
-                <th className="text-left text-xs font-semibold text-black uppercase py-3">Acciones</th>
+                <th className="text-left text-xs font-semibold text-gray-300 uppercase py-3">Usuario</th>
+                <th className="text-left text-xs font-semibold text-gray-300 uppercase py-3">Concepto</th>
+                <th className="text-left text-xs font-semibold text-gray-300 uppercase py-3">Monto</th>
+                <th className="text-left text-xs font-semibold text-gray-300 uppercase py-3">Estado</th>
+                <th className="text-left text-xs font-semibold text-gray-300 uppercase py-3">Acciones</th>
               </tr>
             </thead>
             <tbody>
               {pagosPendientesData.map((pago) => (
                 <tr key={pago.id} className="border-b border-gray-100 last:border-0 hover:bg-gray-50">
-                  <td className="py-4 text-sm text-black font-medium">{pago.usuario}</td>
-                  <td className="py-4 text-sm text-black">{pago.concepto}</td>
-                  <td className="py-4 text-sm font-semibold text-black">{pago.monto}</td>
+                  <td className="py-4 text-sm text-gray-200 font-medium">{pago.usuario}</td>
+                  <td className="py-4 text-sm text-gray-200">{pago.concepto}</td>
+                  <td className="py-4 text-sm font-semibold text-white">{pago.monto}</td>
                   <td className="py-4">
                     <span className={`text-xs font-semibold px-3 py-1 rounded ${getPagoEstadoColor(pago.estado)}`}>
                       {pago.estado}
                     </span>
                   </td>
-                  <td className="py-4 text-sm text-blue-600 font-semibold hover:text-blue-800 cursor-pointer">
+                  <td className="py-4 text-sm text-blue-400 font-semibold hover:text-blue-300 cursor-pointer">
                     Procesar
                   </td>
                 </tr>
@@ -303,24 +318,24 @@ export const AdminDashboard = () => {
       </div>
 
       {/* Acciones Rápidas */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h2 className="text-lg font-bold mb-6" style={{ color: '#000000' }}>Acciones Rápidas</h2>
+      <div className="bg-[#374151] rounded-lg shadow-lg border border-gray-600 p-6">
+        <h2 className="text-lg font-bold mb-6 text-white">Acciones Rápidas</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <button className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition">
-            <Users size={24} className="text-blue-500 mb-3" />
-            <span className="text-sm font-semibold text-black">Nuevo Usuario</span>
+          <button className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-500 rounded-lg hover:border-blue-400 hover:bg-gray-600 transition">
+            <Users size={24} className="text-blue-400 mb-3" />
+            <span className="text-sm font-semibold text-gray-200">Nuevo Usuario</span>
           </button>
-          <button className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-lg hover:border-green-500 hover:bg-green-50 transition">
-            <BookOpen size={24} className="text-green-500 mb-3" />
-            <span className="text-sm font-semibold text-black">Nuevo Curso</span>
+          <button className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-500 rounded-lg hover:border-green-400 hover:bg-gray-600 transition">
+            <BookOpen size={24} className="text-green-400 mb-3" />
+            <span className="text-sm font-semibold text-gray-200">Nuevo Curso</span>
           </button>
-          <button className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition">
-            <Bell size={24} className="text-purple-500 mb-3" />
-            <span className="text-sm font-semibold text-black">Enviar Notificación</span>
+          <button className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-500 rounded-lg hover:border-purple-400 hover:bg-gray-600 transition">
+            <Bell size={24} className="text-purple-400 mb-3" />
+            <span className="text-sm font-semibold text-gray-200">Enviar Notificación</span>
           </button>
-          <button className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-lg hover:border-orange-500 hover:bg-orange-50 transition">
-            <BarChart3 size={24} className="text-orange-500 mb-3" />
-            <span className="text-sm font-semibold text-black">Generar Reporte</span>
+          <button className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-500 rounded-lg hover:border-orange-400 hover:bg-gray-600 transition">
+            <BarChart3 size={24} className="text-orange-400 mb-3" />
+            <span className="text-sm font-semibold text-gray-200">Generar Reporte</span>
           </button>
         </div>
       </div>

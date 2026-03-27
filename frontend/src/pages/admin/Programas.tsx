@@ -78,12 +78,12 @@ export const AdminProgramas = () => {
   );
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="min-h-screen bg-[#0a1628] p-6 max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex justify-between items-start mb-6">
         <div>
-          <h1 className="text-2xl font-bold" style={{ color: '#000000' }}>Gestión de Programas</h1>
-          <p className="text-sm mt-1 font-medium" style={{ color: '#000000' }}>Administra los programas académicos</p>
+          <h1 className="text-2xl font-bold text-white">Gestión de Programas</h1>
+          <p className="text-sm mt-1 font-medium text-gray-300">Administra los programas académicos</p>
         </div>
         <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
           <Plus size={18} />
@@ -92,7 +92,7 @@ export const AdminProgramas = () => {
       </div>
 
       {/* Búsqueda */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-6">
+      <div className="bg-[#374151] rounded-xl shadow-lg border border-gray-600 p-4 mb-6">
         <div className="relative w-full">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={20} />
           <input
@@ -108,7 +108,7 @@ export const AdminProgramas = () => {
       {/* Grid de Programas */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {programasFiltrados.map((programa) => (
-          <div key={programa.id} className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-md transition">
+          <div key={programa.id} className="bg-[#374151] rounded-xl shadow-lg border border-gray-600 overflow-hidden hover:shadow-xl transition">
             {/* Card Header */}
             <div className="p-4 pb-2">
               <div className="flex justify-between items-start mb-3">
@@ -120,42 +120,42 @@ export const AdminProgramas = () => {
                 </span>
               </div>
               
-              <h2 className="text-lg font-bold mb-2" style={{ color: '#000000' }}>{programa.nombre}</h2>
-              <p className="text-sm leading-relaxed" style={{ color: '#000000' }}>{programa.descripcion}</p>
+              <h2 className="text-lg font-bold mb-2 text-white">{programa.nombre}</h2>
+              <p className="text-sm leading-relaxed text-gray-300">{programa.descripcion}</p>
             </div>
 
             {/* Stats */}
-            <div className="px-4 py-3 border-t border-slate-100">
+            <div className="px-4 py-3 border-t border-gray-600">
               <div className="grid grid-cols-3 gap-4">
                 <div className="flex flex-col items-center">
-                  <Clock size={16} className="text-slate-400 mb-1" />
-                  <span className="text-lg font-bold" style={{ color: '#000000' }}>{programa.semestres}</span>
-                  <span className="text-xs" style={{ color: '#000000' }}>Semestres</span>
+                  <Clock size={16} className="text-gray-400 mb-1" />
+                  <span className="text-lg font-bold text-white">{programa.semestres}</span>
+                  <span className="text-xs text-gray-300">Semestres</span>
                 </div>
                 <div className="flex flex-col items-center">
-                  <BookOpen size={16} className="text-slate-400 mb-1" />
-                  <span className="text-lg font-bold" style={{ color: '#000000' }}>{programa.cursos}</span>
-                  <span className="text-xs" style={{ color: '#000000' }}>Cursos</span>
+                  <BookOpen size={16} className="text-gray-400 mb-1" />
+                  <span className="text-lg font-bold text-white">{programa.cursos}</span>
+                  <span className="text-xs text-gray-300">Cursos</span>
                 </div>
                 <div className="flex flex-col items-center">
-                  <Users size={16} className="text-slate-400 mb-1" />
-                  <span className="text-lg font-bold" style={{ color: '#000000' }}>{programa.estudiantes}</span>
-                  <span className="text-xs" style={{ color: '#000000' }}>Estudiantes</span>
+                  <Users size={16} className="text-gray-400 mb-1" />
+                  <span className="text-lg font-bold text-white">{programa.estudiantes}</span>
+                  <span className="text-xs text-gray-300">Estudiantes</span>
                 </div>
               </div>
             </div>
 
             {/* Actions */}
-            <div className="px-4 py-3 border-t border-slate-100 flex gap-2">
-              <button className="flex-1 flex items-center justify-center gap-2 px-3 py-2 border border-slate-200 rounded-lg hover:bg-slate-50 transition">
-                <Eye size={16} className="text-slate-600" />
-                <span className="text-sm font-medium" style={{ color: '#000000' }}>Ver</span>
+            <div className="px-4 py-3 border-t border-gray-600 flex gap-2">
+              <button className="flex-1 flex items-center justify-center gap-2 px-3 py-2 border border-gray-500 rounded-lg hover:bg-gray-600 transition">
+                <Eye size={16} className="text-gray-300" />
+                <span className="text-sm font-medium text-gray-200">Ver</span>
               </button>
-              <button className="flex-1 flex items-center justify-center gap-2 px-3 py-2 border border-slate-200 rounded-lg hover:bg-slate-50 transition">
-                <Edit2 size={16} className="text-slate-600" />
-                <span className="text-sm font-medium" style={{ color: '#000000' }}>Editar</span>
+              <button className="flex-1 flex items-center justify-center gap-2 px-3 py-2 border border-gray-500 rounded-lg hover:bg-gray-600 transition">
+                <Edit2 size={16} className="text-gray-300" />
+                <span className="text-sm font-medium text-gray-200">Editar</span>
               </button>
-              <button className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition">
+              <button className="p-2 text-red-400 hover:bg-red-900/30 rounded-lg transition">
                 <Trash2 size={16} />
               </button>
             </div>

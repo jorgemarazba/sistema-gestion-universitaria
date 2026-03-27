@@ -134,12 +134,12 @@ export const AdminTickets = () => {
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="min-h-screen bg-[#0a1628] p-6 max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex justify-between items-start mb-6">
         <div>
-          <h1 className="text-2xl font-bold" style={{ color: '#000000' }}>Gestión de Tickets</h1>
-          <p className="text-sm mt-1 font-medium" style={{ color: '#000000' }}>Administra los tickets de soporte</p>
+          <h1 className="text-2xl font-bold text-white">Gestión de Tickets</h1>
+          <p className="text-sm mt-1 font-medium text-gray-300">Administra los tickets de soporte</p>
         </div>
         <div className="flex gap-3">
           <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
@@ -150,7 +150,7 @@ export const AdminTickets = () => {
       </div>
 
       {/* Búsqueda y Filtros */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-6">
+      <div className="bg-[#374151] rounded-xl shadow-lg border border-gray-600 p-4 mb-6">
         <div className="flex flex-col md:flex-row gap-4 items-center">
           <div className="relative flex-1 w-full">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={20} />
@@ -181,9 +181,9 @@ export const AdminTickets = () => {
       </div>
 
       {/* Lista de Tickets */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+      <div className="bg-[#374151] rounded-xl shadow-lg border border-gray-600 overflow-hidden">
         <div className="px-6 py-4 border-b border-slate-200">
-          <h2 className="text-lg font-bold flex items-center gap-2" style={{ color: '#000000' }}>
+          <h2 className="text-lg font-bold flex items-center gap-2 text-white">
             <MessageSquare size={20} />
             Lista de Tickets ({ticketsFiltrados.length})
           </h2>
@@ -192,25 +192,25 @@ export const AdminTickets = () => {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="bg-slate-50 border-b border-slate-200">
-                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: '#000000' }}>ID</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: '#000000' }}>Usuario</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: '#000000' }}>Asunto</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: '#000000' }}>Categoría</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: '#000000' }}>Prioridad</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: '#000000' }}>Fecha</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: '#000000' }}>Estado</th>
-                <th className="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wider" style={{ color: '#000000' }}>Acciones</th>
+              <tr className="bg-slate-800 border-b border-gray-600">
+                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-300">ID</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-300">Usuario</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-300">Asunto</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-300">Categoría</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-300">Prioridad</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-300">Fecha</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-300">Estado</th>
+                <th className="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wider text-gray-300">Acciones</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-gray-600">
               {ticketsFiltrados.map((ticket) => (
-                <tr key={ticket.id} className="hover:bg-slate-50 transition">
-                  <td className="px-6 py-4 text-sm font-medium text-slate-500">#{ticket.id}</td>
-                  <td className="px-6 py-4 text-sm font-semibold" style={{ color: '#000000' }}>{ticket.usuario}</td>
-                  <td className="px-6 py-4 text-sm" style={{ color: '#000000' }}>{ticket.asunto}</td>
+                <tr key={ticket.id} className="hover:bg-slate-800 transition">
+                  <td className="px-6 py-4 text-sm font-medium text-white">#{ticket.id}</td>
+                  <td className="px-6 py-4 text-sm font-semibold text-white">{ticket.usuario}</td>
+                  <td className="px-6 py-4 text-sm text-white">{ticket.asunto}</td>
                   <td className="px-6 py-4">
-                    <span className="px-3 py-1 text-xs font-semibold bg-slate-100 text-slate-700 rounded-full">
+                    <span className="px-3 py-1 text-xs font-semibold bg-slate-700 text-gray-300 rounded-full">
                       {ticket.categoria}
                     </span>
                   </td>
@@ -221,8 +221,8 @@ export const AdminTickets = () => {
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="flex items-center gap-1 text-sm" style={{ color: '#000000' }}>
-                      <Clock size={14} className="text-slate-400" />
+                    <div className="flex items-center gap-1 text-sm text-white">
+                      <Clock size={14} className="text-gray-400" />
                       {ticket.fecha}
                     </div>
                   </td>

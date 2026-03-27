@@ -130,12 +130,12 @@ export const AdminMatriculas = () => {
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="min-h-screen bg-[#0a1628] p-6 max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex justify-between items-start mb-6">
         <div>
-          <h1 className="text-2xl font-bold" style={{ color: '#000000' }}>Gestión de Matrículas</h1>
-          <p className="text-sm mt-1 font-medium" style={{ color: '#000000' }}>Administra las matrículas de estudiantes</p>
+          <h1 className="text-2xl font-bold text-white">Gestión de Matrículas</h1>
+          <p className="text-sm mt-1 font-medium text-gray-300">Administra las matrículas de estudiantes</p>
         </div>
         <div className="flex gap-3">
           <button className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-slate-700 hover:bg-slate-50 transition">
@@ -150,7 +150,7 @@ export const AdminMatriculas = () => {
       </div>
 
       {/* Búsqueda y Filtros */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-6">
+      <div className="bg-[#374151] rounded-xl shadow-lg border border-gray-600 p-4 mb-6">
         <div className="flex flex-col md:flex-row gap-4 items-center">
           <div className="relative flex-1 w-full">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={20} />
@@ -181,9 +181,9 @@ export const AdminMatriculas = () => {
       </div>
 
       {/* Lista de Matrículas */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+      <div className="bg-[#374151] rounded-xl shadow-lg border border-gray-600 overflow-hidden">
         <div className="px-6 py-4 border-b border-slate-200">
-          <h2 className="text-lg font-bold flex items-center gap-2" style={{ color: '#000000' }}>
+          <h2 className="text-lg font-bold flex items-center gap-2 text-white">
             <Calendar size={20} />
             Lista de Matrículas ({matriculasFiltradas.length})
           </h2>
@@ -192,28 +192,28 @@ export const AdminMatriculas = () => {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="bg-slate-50 border-b border-slate-200">
-                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: '#000000' }}>ID</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: '#000000' }}>Estudiante</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: '#000000' }}>Programa</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: '#000000' }}>Periodo</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: '#000000' }}>Fecha</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: '#000000' }}>Estado</th>
-                <th className="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wider" style={{ color: '#000000' }}>Acciones</th>
+              <tr className="bg-slate-800 border-b border-gray-600">
+                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-300">ID</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-300">Estudiante</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-300">Programa</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-300">Periodo</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-300">Fecha</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-300">Estado</th>
+                <th className="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wider text-gray-300">Acciones</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-gray-600">
               {matriculasFiltradas.map((matricula) => (
-                <tr key={matricula.id} className="hover:bg-slate-50 transition">
-                  <td className="px-6 py-4 text-sm font-medium text-slate-500">#{matricula.id}</td>
-                  <td className="px-6 py-4 text-sm font-semibold" style={{ color: '#000000' }}>{matricula.estudiante}</td>
-                  <td className="px-6 py-4 text-sm" style={{ color: '#000000' }}>{matricula.programa}</td>
+                <tr key={matricula.id} className="hover:bg-slate-800 transition">
+                  <td className="px-6 py-4 text-sm font-medium text-white">#{matricula.id}</td>
+                  <td className="px-6 py-4 text-sm font-semibold text-white">{matricula.estudiante}</td>
+                  <td className="px-6 py-4 text-sm text-white">{matricula.programa}</td>
                   <td className="px-6 py-4">
                     <span className="px-3 py-1 text-xs font-semibold bg-slate-100 text-slate-700 rounded-full border border-slate-200">
                       {matricula.periodo}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-sm" style={{ color: '#000000' }}>{matricula.fecha}</td>
+                  <td className="px-6 py-4 text-sm text-white">{matricula.fecha}</td>
                   <td className="px-6 py-4">
                     <span
                       className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold ${getEstadoStyle(

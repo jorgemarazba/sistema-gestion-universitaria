@@ -6,32 +6,32 @@ export const AdminReportes = () => {
   ];
 
   return (
-    <div className="p-6">
-      <h1 className="text-3xl font-bold mb-6" style={{ color: '#000000' }}>Reportes</h1>
+    <div className="min-h-screen bg-[#0a1628] p-6 max-w-7xl mx-auto">
+      <h1 className="text-3xl font-bold mb-6 text-white">Reportes</h1>
       
       <div className="mb-6">
         <button className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 font-semibold">Generar Nuevo Reporte</button>
       </div>
 
-      <div className="bg-white shadow-md rounded-lg overflow-hidden">
+      <div className="bg-[#374151] rounded-xl shadow-lg border border-gray-600 overflow-hidden">
         <table className="min-w-full">
           <thead>
-            <tr className="bg-gray-100 border-b-2 border-gray-200">
-              <th className="px-5 py-3 text-left text-xs font-semibold uppercase" style={{ color: '#000000' }}>Título</th>
-              <th className="px-5 py-3 text-left text-xs font-semibold uppercase" style={{ color: '#000000' }}>Tipo</th>
-              <th className="px-5 py-3 text-left text-xs font-semibold uppercase" style={{ color: '#000000' }}>Fecha de Generación</th>
-              <th className="px-5 py-3 text-center text-xs font-semibold uppercase" style={{ color: '#000000' }}>Acciones</th>
+            <tr className="bg-slate-800 border-b border-gray-600">
+              <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-gray-300">Título</th>
+              <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-gray-300">Tipo</th>
+              <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-gray-300">Fecha de Generación</th>
+              <th className="px-5 py-3 text-center text-xs font-semibold uppercase text-gray-300">Acciones</th>
             </tr>
           </thead>
           <tbody>
             {reportes.map((reporte) => (
-              <tr key={reporte.id} className="border-b border-gray-200 hover:bg-gray-50">
-                <td className="px-5 py-4 text-sm font-medium" style={{ color: '#000000' }}>{reporte.titulo}</td>
-                <td className="px-5 py-4 text-sm" style={{ color: '#000000' }}>{reporte.tipo}</td>
-                <td className="px-5 py-4 text-sm" style={{ color: '#000000' }}>{reporte.generado}</td>
+              <tr key={reporte.id} className="border-b border-gray-600 hover:bg-slate-800 transition">
+                <td className="px-5 py-4 text-sm font-medium text-white">{reporte.titulo}</td>
+                <td className="px-5 py-4 text-sm text-gray-300">{reporte.tipo}</td>
+                <td className="px-5 py-4 text-sm text-gray-300">{reporte.generado}</td>
                 <td className="px-5 py-4 text-sm flex justify-center gap-2">
-                  <button className="text-blue-600 hover:underline">Descargar</button>
-                  <button className="text-gray-600 hover:underline">Eliminar</button>
+                  <button className="text-blue-400 hover:text-blue-300">Descargar</button>
+                  <button className="text-gray-400 hover:text-gray-300">Eliminar</button>
                 </td>
               </tr>
             ))}
