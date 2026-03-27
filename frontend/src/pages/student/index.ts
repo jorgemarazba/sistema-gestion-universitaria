@@ -1,0 +1,11 @@
+export { StudentLayout } from './studentLayout';
+export { StudentInscripcion } from './Inscripcion';
+export { StudentPagos } from './Pagos';
+export { StudentCalificaciones } from './Calificaciones';
+export { StudentHistorial } from './Historial';
+export { StudentDocumentos } from './Documentos';
+export { StudentHorario } from './Horario';
+export { StudentSoporte } from './Soporte';
+export { StudentMensajes } from './Mensajes';
+export { StudentReportes } from './Reportes';
+export { StudentPerfil } from './Perfil';

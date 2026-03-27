@@ -31,12 +31,18 @@ export const AdminSolicitudes = () => {
   const cargarSolicitudes = async () => {
     try {
       setLoading(true);
+      console.log('📡 Fetching from:', `${API_URL}/usuarios/pendientes`);
       const response = await axios.get(`${API_URL}/usuarios/pendientes`);
-      setSolicitudes(response.data);
+      console.log('✅ Response data:', response.data);
+      const solicitudesData = response.data?.data || response.data || [];
+      console.log('📊 Array length:', solicitudesData.length);
+      setSolicitudes(solicitudesData);
       setError('');
-    } catch (err) {
-      setError('Error al cargar las solicitudes. Intenta de nuevo.');
-      console.error('Error cargando solicitudes:', err);
+    } catch (err: any) {
+      console.error('❌ Error cargando solicitudes:', err);
+      console.error('❌ Response:', err.response?.data);
+      console.error('❌ Status:', err.response?.status);
+      setError(`Error al cargar: ${err.response?.data?.message || err.message}`);
     } finally {
       setLoading(false);
     }
@@ -50,15 +56,19 @@ export const AdminSolicitudes = () => {
   const handleAprobar = async (id: string) => {
     try {
       setProcessingId(id);
-      await axios.patch(`${API_URL}/usuarios/${id}/status`, {
+      const response = await axios.patch(`${API_URL}/usuarios/${id}/status`, {
         status: 'activo',
       });
+      
+      console.log('✅ Aprobación exitosa:', response.data);
       
       // Remover de la lista local
       setSolicitudes((prev) => prev.filter((s) => s.id_usuario !== id));
       alert('✅ Solicitud aprobada. Se enviaron las credenciales al correo personal del usuario.');
     } catch (err: any) {
-      const msg = err.response?.data?.message || 'Error al aprobar la solicitud';
+      console.error('❌ Error al aprobar:', err);
+      console.error('❌ Response:', err.response?.data);
+      const msg = err.response?.data?.message || err.response?.data?.error || 'Error al aprobar la solicitud';
       alert(`❌ ${msg}`);
     } finally {
       setProcessingId(null);

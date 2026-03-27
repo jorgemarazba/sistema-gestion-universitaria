@@ -56,6 +56,12 @@ export class UsuariosController {
     return this.usuariosService.updateStatus(id, status, motivoRechazo);
   }
 
+  @Post(':id/reenviar-credenciales')
+  @ApiOperation({ summary: 'Reenviar credenciales a un usuario activo' })
+  reenviarCredenciales(@Param('id') id: string) {
+    return this.usuariosService.reenviarCredenciales(id);
+  }
+
   // ==================== CRUD BASIC ENDPOINTS ====================
 
   @Post()

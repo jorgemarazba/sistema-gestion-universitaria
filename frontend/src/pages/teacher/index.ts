@@ -1,0 +1,9 @@
+export { TeacherLayout } from './teacherLayout';
+export { TeacherDashboard } from './Dashboard';
+export { TeacherCursos } from './Cursos';
+export { TeacherEstudiantes } from './Estudiantes';
+export { TeacherCalificaciones } from './Calificaciones';
+export { TeacherHorario } from './Horario';
+export { TeacherMateriales } from './Materiales';
+export { TeacherMensajes } from './Mensajes';
+export { TeacherReportes } from './Reportes';

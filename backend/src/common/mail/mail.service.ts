@@ -4,22 +4,50 @@ import * as nodemailer from 'nodemailer';
 @Injectable()
 export class MailService {
   private transporter: nodemailer.Transporter;
+  private isConfigValid: boolean = false;
 
   constructor() {
-    this.initializeTransporter();
+    this.validateConfig();
+    if (this.isConfigValid) {
+      this.initializeTransporter();
+    }
+  }
+
+  private validateConfig(): void {
+    const user = process.env.GMAIL_USER;
+    const pass = process.env.GMAIL_APP_PASSWORD;
+
+    if (!user || !pass) {
+      console.warn('⚠️  Configuración de email incompleta:');
+      if (!user) console.warn('   - GMAIL_USER no está definido');
+      if (!pass) console.warn('   - GMAIL_APP_PASSWORD no está definido');
+      console.warn('   Los emails no se enviarán. Revisa tu archivo .env');
+      this.isConfigValid = false;
+    } else {
+      console.log('✅ Configuración de email cargada:');
+      console.log(`   - Usuario: ${user}`);
+      console.log(`   - Password: ${pass.substring(0, 4)}...${pass.substring(pass.length - 4)}`);
+      this.isConfigValid = true;
+    }
   }
 
   private initializeTransporter() {
-    this.transporter = nodemailer.createTransport({
-      service: 'gmail',
-      host: 'smtp.gmail.com',
-      port: 587,
-      secure: false, // true for 465, false for other ports
-      auth: {
-        user: process.env.GMAIL_USER,
-        pass: process.env.GMAIL_APP_PASSWORD,
-      },
-    });
+    try {
+      this.transporter = nodemailer.createTransport({
+        service: 'gmail',
+        host: 'smtp.gmail.com',
+        port: 587,
+        secure: false,
+        auth: {
+          user: process.env.GMAIL_USER,
+          pass: process.env.GMAIL_APP_PASSWORD,
+        },
+      });
+      console.log('✅ Transportador de email inicializado correctamente');
+    } catch (error) {
+      console.error('❌ Error al inicializar transportador:', error);
+      this.isConfigValid = false;
+    }
   }
 
   /**

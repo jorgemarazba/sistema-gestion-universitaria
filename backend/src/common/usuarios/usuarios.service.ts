@@ -201,6 +201,59 @@ export class UsuariosService {
   }
 
   /**
+   * Reenviar credenciales a un usuario activo
+   * Genera nueva contraseña temporal y la envía por email
+   */
+  async reenviarCredenciales(id: string) {
+    const usuario = await this.usuariosRepo.findOne({
+      where: { id_usuario: id },
+    });
+
+    if (!usuario) {
+      throw new BadRequestException('Usuario no encontrado');
+    }
+
+    if (usuario.estado !== 'activo') {
+      throw new BadRequestException('Solo se pueden reenviar credenciales a usuarios activos');
+    }
+
+    try {
+      // 1. Generar nueva contraseña temporal
+      const nuevaPasswordTemporal = generarContrasenaTemporal(12);
+
+      // 2. Hashear nueva contraseña
+      const hashPassword = await bcrypt.hash(nuevaPasswordTemporal, 10);
+
+      // 3. Actualizar contraseña en BD
+      usuario.contrasena = hashPassword;
+      await this.usuariosRepo.save(usuario);
+
+      console.log(`🔄 Credenciales regeneradas para usuario: ${usuario.id_usuario}`);
+
+      // 4. Enviar email con nuevas credenciales
+      await this.mailService.enviarCredenciales(
+        usuario.correoPersonal,
+        usuario.nombre,
+        usuario.apellido,
+        usuario.correoInstitucional,
+        nuevaPasswordTemporal,
+      );
+
+      console.log(`✉️ Nuevas credenciales enviadas a: ${usuario.correoPersonal}`);
+
+      return {
+        success: true,
+        message: 'Credenciales reenviadas exitosamente',
+      };
+    } catch (error) {
+      console.error('❌ Error al reenviar credenciales:', error);
+      throw new BadRequestException(
+        `Error reenviando credenciales: ${error.message}`,
+      );
+    }
+  }
+
+  /**
    * Procesar rechazo de un usuario
    * Guarda el motivo y envía notificación
    */
