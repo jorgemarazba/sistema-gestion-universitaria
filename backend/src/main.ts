@@ -18,6 +18,8 @@ async function bootstrap() {
       'http://localhost:5173',
       'http://localhost:5174',
       'http://localhost:3000',
+      'http://localhost:3001',
+      'http://localhost:3002',
       'http://127.0.0.1:5173',
       'http://127.0.0.1:5174',
     ],
@@ -26,8 +28,8 @@ async function bootstrap() {
     allowedHeaders: 'Content-Type,Authorization',
   });
 
-  // 3. Prefijo global para todas las rutas
-  app.setGlobalPrefix('api/v1');
+  // 3. Prefijo global para todas las rutas (excepto /)
+  app.setGlobalPrefix('api/v1', { exclude: ['/'] });
 
   // 4. Registrar el Filtro Global de Errores
   app.useGlobalFilters(new AllExceptionsFilter());
@@ -55,8 +57,8 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document);
 
-  await app.listen(3000);
-  console.log(' Servidor corriendo en: http://localhost:3000');
-  console.log(' Documentación en: http://localhost:3000/api/docs');
+  await app.listen(3002);
+  console.log(' Servidor corriendo en: http://localhost:3002');
+  console.log(' Documentación en: http://localhost:3002/api/docs');
 }
 void bootstrap();
