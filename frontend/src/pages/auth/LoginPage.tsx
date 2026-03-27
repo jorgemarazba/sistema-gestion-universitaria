@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Eye, EyeOff, Loader2, Lock, Mail } from 'lucide-react'
+import { Eye, EyeOff, Loader2, Lock, Mail, X, CheckCircle, AlertCircle } from 'lucide-react'
 import {
   loginSchema,
   loginDefaultValues,
@@ -11,8 +11,14 @@ import {
 import api from '../../api/axios'
 import { useAuthStore } from '../../store/authStore'
 
+interface Toast {
+  type: 'success' | 'error'
+  message: string
+}
+
 export function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
+  const [toast, setToast] = useState<Toast | null>(null)
   const setAuth = useAuthStore((state) => state.setAuth)
   const navigate = useNavigate()
 
@@ -41,8 +47,8 @@ export function LoginPage() {
 
       const { access_token, user } = response.data.data
       setAuth(access_token, user)
-      alert(`¡Bienvenido ${user.nombre}!`)
-      navigate('/admin/dashboard')
+      setToast({ type: 'success', message: `¡Bienvenido ${user.nombre}!` })
+      setTimeout(() => navigate('/admin/dashboard'), 1500)
     } catch (err: unknown) {
       const axErr = err as { response?: { data?: { message?: string; error?: string | { message?: string } } } }
       const msg =
@@ -51,12 +57,24 @@ export function LoginPage() {
           ? axErr.response.data.error
           : axErr.response?.data?.error?.message)
       console.error('Login error:', axErr.response?.data ?? err)
-      alert(msg ?? 'Error al iniciar sesión')
+      setToast({ type: 'error', message: msg ?? 'Error al iniciar sesión' })
     }
   }
 
   return (
     <div className="relative flex min-h-svh flex-col items-center justify-center overflow-hidden bg-[#070b14] px-4 py-10">
+      {/* Toast Notification */}
+      {toast && (
+        <div className={`fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-lg shadow-lg transition-all ${
+          toast.type === 'success' ? 'bg-green-500/90 text-white' : 'bg-red-500/90 text-white'
+        }`}>
+          {toast.type === 'success' ? <CheckCircle size={18} /> : <AlertCircle size={18} />}
+          <span className="text-sm font-medium">{toast.message}</span>
+          <button onClick={() => setToast(null)} className="ml-2 hover:opacity-70">
+            <X size={16} />
+          </button>
+        </div>
+      )}
       <div
         className="pointer-events-none absolute inset-0 opacity-40"
         style={{
