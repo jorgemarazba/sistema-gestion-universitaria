@@ -5,6 +5,7 @@ export const solicitudSchema = z.object({
   apellido: z.string().min(2, 'Apellido demasiado corto'),
   documento_identidad: z.string().min(5, 'Documento no válido'),
   correo_personal: z.string().email('Ingresa un correo personal válido'),
+  telefono: z.string().min(10, 'Teléfono no válido'),
   tipo_usuario: z.enum(['estudiante', 'docente']),
   motivo: z.string().min(10, 'Por favor, describe brevemente tu facultad o área'),
 })

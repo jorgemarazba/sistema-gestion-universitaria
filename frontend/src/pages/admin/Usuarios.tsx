@@ -5,17 +5,16 @@ import axios from 'axios';
 const API_URL = 'http://localhost:3002/api/v1';
 
 interface Usuario {
-  id_usuario: number;
+  id_usuario: string;
   nombre: string;
   apellido: string;
-  email: string;
-  email_personal?: string;
-  telefono: string;
-  documento_tipo: string;
-  documento_numero: string;
-  tipo_usuario: 'estudiante' | 'profesor' | 'administrador';
+  correo_institucional: string;
+  correo_personal?: string;
+  telefono?: string;
+  documentoIdentidad: string;
+  rol: 'estudiante' | 'profesor' | 'administrador';
   estado: 'activo' | 'verificacion pendiente' | 'suspendido';
-  fecha_registro: string;
+  fechaRegistro: string;
 }
 
 const filtros = ['Todos', 'estudiante', 'profesor', 'administrador'] as const;
@@ -28,6 +27,16 @@ export const AdminUsuarios = () => {
   const [filtroActivo, setFiltroActivo] = useState<FiltroRol>('Todos');
   const [usuarioSeleccionado, setUsuarioSeleccionado] = useState<Usuario | null>(null);
   const [mostrarModal, setMostrarModal] = useState(false);
+  const [mostrarModalCrear, setMostrarModalCrear] = useState(false);
+  const [creandoUsuario, setCreandoUsuario] = useState(false);
+  const [formNuevoUsuario, setFormNuevoUsuario] = useState({
+    nombre: '',
+    apellido: '',
+    documentoIdentidad: '',
+    correo_personal: '',
+    telefono: '',
+    rol: 'estudiante' as const,
+  });
   const [reenviando, setReenviando] = useState(false);
   const [mensajeExito, setMensajeExito] = useState('');
 
@@ -52,10 +61,11 @@ export const AdminUsuarios = () => {
     const coincideBusqueda = 
       usuario.nombre?.toLowerCase().includes(busqueda.toLowerCase()) ||
       usuario.apellido?.toLowerCase().includes(busqueda.toLowerCase()) ||
-      usuario.email?.toLowerCase().includes(busqueda.toLowerCase()) ||
-      usuario.documento_numero?.includes(busqueda);
+      usuario.correo_institucional?.toLowerCase().includes(busqueda.toLowerCase()) ||
+      usuario.documentoIdentidad?.includes(busqueda);
     
-    const coincideFiltro = filtroActivo === 'Todos' || usuario.tipo_usuario === filtroActivo;
+    const coincideFiltro = filtroActivo === 'Todos' || 
+      usuario.rol?.toLowerCase() === filtroActivo.toLowerCase();
     
     return coincideBusqueda && coincideFiltro;
   });
@@ -98,6 +108,39 @@ export const AdminUsuarios = () => {
     }
   };
 
+  const handleCrearUsuario = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setCreandoUsuario(true);
+      await axios.post(`${API_URL}/usuarios`, {
+        nombre: formNuevoUsuario.nombre,
+        apellido: formNuevoUsuario.apellido,
+        documentoIdentidad: formNuevoUsuario.documentoIdentidad,
+        correoPersonal: formNuevoUsuario.correo_personal,
+        telefono: formNuevoUsuario.telefono,
+        rol: formNuevoUsuario.rol,
+        estado: 'activo',
+      });
+      setMostrarModalCrear(false);
+      setFormNuevoUsuario({
+        nombre: '',
+        apellido: '',
+        documentoIdentidad: '',
+        correo_personal: '',
+        telefono: '',
+        rol: 'estudiante',
+      });
+      cargarUsuarios();
+      setMensajeExito('Usuario creado exitosamente');
+      setTimeout(() => setMensajeExito(''), 3000);
+    } catch (err) {
+      console.error('Error al crear usuario:', err);
+      alert('Error al crear usuario');
+    } finally {
+      setCreandoUsuario(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#0a1628] p-6 max-w-7xl mx-auto">
       <div className="flex justify-between items-start mb-6">
@@ -114,7 +157,10 @@ export const AdminUsuarios = () => {
             <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
             <span>Actualizar</span>
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+          <button 
+            onClick={() => setMostrarModalCrear(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+          >
             <Plus size={18} />
             <span>Nuevo Usuario</span>
           </button>
@@ -175,7 +221,7 @@ export const AdminUsuarios = () => {
             <tbody className="divide-y divide-gray-600">
               {usuariosFiltrados.map((usuario) => (
                 <tr key={usuario.id_usuario} className="hover:bg-slate-800 transition">
-                  <td className="px-6 py-4 text-sm font-medium text-white">#{usuario.id_usuario}</td>
+                  <td className="px-6 py-4 text-sm font-medium text-white">#{usuario.id_usuario.slice(0,8)}</td>
                   <td className="px-6 py-4">
                     <div className="text-sm font-semibold text-white">{usuario.nombre} {usuario.apellido}</div>
                   </td>
@@ -183,7 +229,7 @@ export const AdminUsuarios = () => {
                     <div className="flex flex-col gap-1">
                       <div className="flex items-center gap-1 text-sm text-gray-300">
                         <Mail size={14} />
-                        {usuario.email}
+                        {usuario.correo_institucional || 'N/A'}
                       </div>
                       <div className="flex items-center gap-1 text-sm text-gray-400">
                         <Phone size={14} />
@@ -192,11 +238,11 @@ export const AdminUsuarios = () => {
                     </div>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-300">
-                    <span className="font-medium text-white">{usuario.documento_tipo}</span> {usuario.documento_numero}
+                    <span className="font-medium text-white">CC</span> {usuario.documentoIdentidad}
                   </td>
                   <td className="px-6 py-4">
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${getRolColor(usuario.tipo_usuario)}`}>
-                      {usuario.tipo_usuario}
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${getRolColor(usuario.rol)}`}>
+                      {usuario.rol}
                     </span>
                   </td>
                   <td className="px-6 py-4">
@@ -248,14 +294,14 @@ export const AdminUsuarios = () => {
               <div>
                 <label className="text-sm text-gray-400">Correo Institucional</label>
                 <div className="flex items-center gap-2">
-                  <p className="text-white font-medium font-mono bg-slate-800 p-2 rounded flex-1">{usuarioSeleccionado.email}</p>
+                  <p className="text-white font-medium font-mono bg-slate-800 p-2 rounded flex-1">{usuarioSeleccionado.correo_institucional}</p>
                 </div>
               </div>
 
-              {usuarioSeleccionado.email_personal && (
+              {usuarioSeleccionado.correo_personal && (
                 <div>
                   <label className="text-sm text-gray-400">Correo Personal</label>
-                  <p className="text-white">{usuarioSeleccionado.email_personal}</p>
+                  <p className="text-white">{usuarioSeleccionado.correo_personal}</p>
                 </div>
               )}
 
@@ -289,6 +335,118 @@ export const AdminUsuarios = () => {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Crear Usuario */}
+      {mostrarModalCrear && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-[#374151] rounded-xl shadow-2xl border border-gray-600 max-w-lg w-full max-h-[90vh] overflow-y-auto">
+            <div className="px-6 py-4 border-b border-gray-600 flex justify-between items-center">
+              <h3 className="text-lg font-bold text-white">Crear Nuevo Usuario</h3>
+              <button onClick={() => setMostrarModalCrear(false)} className="text-gray-400 hover:text-white">
+                <X size={20} />
+              </button>
+            </div>
+            
+            <form onSubmit={handleCrearUsuario} className="p-6 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm text-gray-400 mb-1 block">Nombre</label>
+                  <input
+                    type="text"
+                    value={formNuevoUsuario.nombre}
+                    onChange={(e) => setFormNuevoUsuario({...formNuevoUsuario, nombre: e.target.value})}
+                    className="w-full px-3 py-2 bg-slate-800 border border-gray-600 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="text-sm text-gray-400 mb-1 block">Apellido</label>
+                  <input
+                    type="text"
+                    value={formNuevoUsuario.apellido}
+                    onChange={(e) => setFormNuevoUsuario({...formNuevoUsuario, apellido: e.target.value})}
+                    className="w-full px-3 py-2 bg-slate-800 border border-gray-600 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-sm text-gray-400 mb-1 block">Documento de Identidad</label>
+                <input
+                  type="text"
+                  value={formNuevoUsuario.documentoIdentidad}
+                  onChange={(e) => setFormNuevoUsuario({...formNuevoUsuario, documentoIdentidad: e.target.value})}
+                  className="w-full px-3 py-2 bg-slate-800 border border-gray-600 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="text-sm text-gray-400 mb-1 block">Correo Personal</label>
+                <input
+                  type="email"
+                  value={formNuevoUsuario.correo_personal}
+                  onChange={(e) => setFormNuevoUsuario({...formNuevoUsuario, correo_personal: e.target.value})}
+                  className="w-full px-3 py-2 bg-slate-800 border border-gray-600 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="text-sm text-gray-400 mb-1 block">Teléfono</label>
+                <input
+                  type="tel"
+                  value={formNuevoUsuario.telefono}
+                  onChange={(e) => setFormNuevoUsuario({...formNuevoUsuario, telefono: e.target.value})}
+                  className="w-full px-3 py-2 bg-slate-800 border border-gray-600 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="text-sm text-gray-400 mb-1 block">Rol</label>
+                <select
+                  value={formNuevoUsuario.rol}
+                  onChange={(e) => setFormNuevoUsuario({...formNuevoUsuario, rol: e.target.value as 'estudiante' | 'profesor' | 'administrador'})}
+                  className="w-full px-3 py-2 bg-slate-800 border border-gray-600 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="estudiante">Estudiante</option>
+                  <option value="profesor">Profesor</option>
+                  <option value="administrador">Administrador</option>
+                </select>
+              </div>
+
+              <div className="pt-4 flex gap-3">
+                <button
+                  type="submit"
+                  disabled={creandoUsuario}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+                >
+                  {creandoUsuario ? (
+                    <>
+                      <RefreshCw size={18} className="animate-spin" />
+                      Creando...
+                    </>
+                  ) : (
+                    <>
+                      <Plus size={18} />
+                      Crear Usuario
+                    </>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMostrarModalCrear(false)}
+                  className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

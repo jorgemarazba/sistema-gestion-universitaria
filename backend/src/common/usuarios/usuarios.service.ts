@@ -7,6 +7,7 @@ import { CreateSolicitudDto } from './dto/create-solicitud.dto';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
 import { MailService } from '../mail/mail.service';
+import { NotificacionesService } from '../notificaciones/notificaciones.service';
 import {
   generarContrasenaTemporal,
   generarCorreoInstitucional,
@@ -18,6 +19,7 @@ export class UsuariosService {
     @InjectRepository(Usuario)
     private readonly usuariosRepo: Repository<Usuario>,
     private readonly mailService: MailService,
+    private readonly notificacionesService: NotificacionesService,
   ) {}
 
   async registrarSolicitud(dto: CreateSolicitudDto) {
@@ -39,12 +41,22 @@ export class UsuariosService {
       apellido: dto.apellido,
       documentoIdentidad: dto.documento_identidad,
       correoPersonal: dto.correo_personal,
-      rol: dto.tipo_usuario,
+      telefono: dto.telefono,
+      rol: dto.tipo_usuario === 'docente' ? 'profesor' : 'estudiante',
       motivoSolicitud: dto.motivo,
       estado: 'pendiente',
     });
 
-    return await this.usuariosRepo.save(nuevaSolicitud);
+    const usuarioGuardado = await this.usuariosRepo.save(nuevaSolicitud);
+
+    // Crear notificación para admin
+    await this.notificacionesService.notificarNuevaSolicitud(
+      usuarioGuardado.id_usuario,
+      `${dto.nombre} ${dto.apellido}`,
+      dto.tipo_usuario,
+    );
+
+    return usuarioGuardado;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- stub pendiente
@@ -117,6 +129,34 @@ export class UsuariosService {
       where: { estado: 'pendiente' },
       order: { fechaRegistro: 'DESC' },
     });
+  }
+
+  /**
+   * Obtener lista de usuarios recientes
+   */
+  async findRecientes(limite: number = 5): Promise<Usuario[]> {
+    return await this.usuariosRepo.find({
+      order: { fechaRegistro: 'DESC' },
+      take: limite,
+    });
+  }
+
+  async getEstadisticas(): Promise<{ totalUsuarios: number; usuariosActivos: number; usuariosPendientes: number; usuariosSuspendidos: number }> {
+    const totalUsuarios = await this.usuariosRepo.count();
+    const usuariosActivos = await this.usuariosRepo.count({ where: { estado: 'activo' } });
+    const usuariosPendientes = await this.usuariosRepo.count({ where: { estado: 'pendiente' } });
+    const usuariosSuspendidos = await this.usuariosRepo.count({ where: { estado: 'suspendido' } });
+    return { totalUsuarios, usuariosActivos, usuariosPendientes, usuariosSuspendidos };
+  }
+
+  async getDistribucionRoles(): Promise<{ rol: string; cantidad: number }[]> {
+    const usuarios = await this.usuariosRepo.find();
+    const distribucion = usuarios.reduce((acc, usuario) => {
+      const rol = usuario.rol || 'desconocido';
+      acc[rol] = (acc[rol] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+    return Object.entries(distribucion).map(([rol, cantidad]) => ({ rol, cantidad }));
   }
 
   /**

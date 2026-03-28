@@ -25,6 +25,9 @@ export class Usuario {
   @Column({ name: 'correo_personal', unique: true })
   correoPersonal: string;
 
+  @Column({ nullable: true })
+  telefono: string;
+
   @Column({ name: 'contrasena', select: false, nullable: true })
   contrasena: string;
 

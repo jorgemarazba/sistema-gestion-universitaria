@@ -114,7 +114,7 @@ export class MailService {
   }
 
   /**
-   * Template HTML para credenciales
+   * Template HTML para credenciales - Estilo Universitario Profesional
    */
   private generarTemplateCredenciales(
     nombre: string,
@@ -129,68 +129,217 @@ export class MailService {
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
-          body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f5f5f5; margin: 0; padding: 0; }
-          .container { max-width: 600px; margin: 20px auto; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); overflow: hidden; }
-          .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; }
-          .content { padding: 30px; }
-          .credentials-box { background: #f8f9fa; border-left: 4px solid #667eea; padding: 15px; margin: 20px 0; border-radius: 4px; }
-          .credential-item { margin: 12px 0; }
-          .label { font-weight: 600; color: #333; }
-          .value { color: #666; font-family: 'Courier New', monospace; background: white; padding: 8px; border-radius: 3px; display: inline-block; margin-top: 3px; }
-          .warning { background: #fff3cd; border: 1px solid #ffc107; padding: 12px; border-radius: 4px; margin: 15px 0; color: #856404; }
-          .footer { background: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; color: #666; }
-          .button { display: inline-block; background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 4px; margin: 15px 0; }
-          a { color: #667eea; }
+          @import url('https://fonts.googleapis.com/css2?family=Crimson+Text:wght@400;600;700&family=Source+Sans+Pro:wght@400;600&display=swap');
+          
+          body { 
+            font-family: 'Source Sans Pro', Arial, sans-serif; 
+            background-color: #f8f9fa; 
+            margin: 0; 
+            padding: 0; 
+            line-height: 1.6;
+          }
+          .container { 
+            max-width: 600px; 
+            margin: 20px auto; 
+            background: white; 
+            border: 1px solid #e9ecef;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
+          }
+          .header { 
+            background: #1e3a5f; 
+            color: white; 
+            padding: 40px 30px; 
+            text-align: center;
+            border-bottom: 4px solid #c9a227;
+          }
+          .header h1 {
+            font-family: 'Crimson Text', Georgia, serif;
+            font-size: 28px;
+            margin: 0 0 10px 0;
+            font-weight: 700;
+          }
+          .header-subtitle {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            opacity: 0.9;
+          }
+          .content { 
+            padding: 40px 30px; 
+            color: #343a40;
+          }
+          .saludo {
+            font-family: 'Crimson Text', Georgia, serif;
+            font-size: 20px;
+            margin-bottom: 20px;
+            color: #1e3a5f;
+          }
+          .mensaje-principal {
+            margin-bottom: 30px;
+            font-size: 16px;
+          }
+          .credentials-box { 
+            background: #f8f9fa; 
+            border: 2px solid #1e3a5f;
+            padding: 25px; 
+            margin: 30px 0; 
+          }
+          .credentials-title {
+            font-family: 'Crimson Text', Georgia, serif;
+            font-size: 18px;
+            color: #1e3a5f;
+            margin-bottom: 20px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+          }
+          .credential-item { 
+            margin: 15px 0;
+            padding: 15px;
+            background: white;
+            border-left: 4px solid #c9a227;
+          }
+          .label { 
+            font-weight: 600; 
+            color: #1e3a5f;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+          }
+          .value { 
+            color: #212529; 
+            font-family: 'Courier New', monospace; 
+            font-size: 15px;
+            font-weight: 600;
+          }
+          .warning { 
+            background: #fff3cd; 
+            border: 1px solid #ffc107; 
+            padding: 20px; 
+            margin: 30px 0; 
+            color: #856404;
+            font-size: 14px;
+          }
+          .warning strong {
+            color: #856404;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+          }
+          .next-steps-title {
+            font-family: 'Crimson Text', Georgia, serif;
+            font-size: 18px;
+            color: #1e3a5f;
+            margin-bottom: 15px;
+            font-weight: 600;
+          }
+          .next-steps-list {
+            margin: 20px 0;
+            padding-left: 20px;
+          }
+          .next-steps-list li {
+            margin: 10px 0;
+            color: #495057;
+          }
+          .button-container {
+            text-align: center;
+            margin: 35px 0;
+          }
+          .button { 
+            display: inline-block; 
+            background: #1e3a5f; 
+            color: white !important; 
+            padding: 15px 40px; 
+            text-decoration: none; 
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 13px;
+            border: 2px solid #1e3a5f;
+          }
+          .button:hover {
+            background: #c9a227;
+            border-color: #c9a227;
+          }
+          .footer { 
+            background: #f8f9fa; 
+            border-top: 1px solid #e9ecef;
+            padding: 30px; 
+            text-align: center; 
+            font-size: 13px; 
+            color: #6c757d; 
+          }
+          .footer-brand {
+            font-family: 'Crimson Text', Georgia, serif;
+            font-size: 16px;
+            color: #1e3a5f;
+            margin-bottom: 10px;
+            font-weight: 600;
+          }
+          .divider {
+            width: 60px;
+            height: 2px;
+            background: #c9a227;
+            margin: 20px auto;
+          }
         </style>
       </head>
       <body>
         <div class="container">
           <div class="header">
-            <h1>¡Bienvenido, ${nombre}!</h1>
-            <p>Tu solicitud ha sido aprobada exitosamente 🎉</p>
+            <div class="header-subtitle">Sistema de Gestion Universitaria</div>
+            <div class="divider" style="background: rgba(201, 162, 39, 0.5);"></div>
+            <h1>Bienvenido a la Universidad</h1>
           </div>
           
           <div class="content">
-            <p>Hola <strong>${nombre} ${apellido}</strong>,</p>
+            <div class="saludo">Estimado(a) ${nombre} ${apellido},</div>
             
-            <p>Es un placer informarte que tu solicitud de acceso a la Plataforma Educativa ha sido <strong style="color: #28a745;">aprobada</strong>. Aquí están tus credenciales de acceso:</p>
+            <div class="mensaje-principal">
+              Nos complace informarle que su solicitud de acceso al Sistema de Gestion Universitaria ha sido <strong style="color: #1e3a5f;">APROBADA</strong>. A continuacion encontrara sus credenciales institucionales:
+            </div>
             
             <div class="credentials-box">
+              <div class="credentials-title">Credenciales de Acceso</div>
+              
               <div class="credential-item">
-                <div class="label">📧 Correo Institucional:</div>
+                <div class="label">Correo Institucional:</div>
                 <div class="value">${correoInstitucional}</div>
               </div>
               
               <div class="credential-item">
-                <div class="label">🔐 Contraseña Temporal:</div>
+                <div class="label">Contraseña Temporal:</div>
                 <div class="value">${passwordTemporal}</div>
               </div>
             </div>
             
             <div class="warning">
-              <strong>⚠️ Importante:</strong> Esta es una contraseña temporal. Por tu seguridad, debes cambiarla en tu primer acceso a la plataforma.
+              <strong>NOTA DE SEGURIDAD:</strong><br>
+              Esta contraseña es temporal y de un solo uso. Por motivos de seguridad institucional, debe cambiarla inmediatamente al ingresar por primera vez a la plataforma.
             </div>
             
-            <p><strong>Próximos pasos:</strong></p>
-            <ol>
-              <li>Accede a la plataforma con las credenciales proporcionadas</li>
-              <li>Cambia tu contraseña temporal por una contraseña segura</li>
-              <li>Completa tu perfil de usuario</li>
-              <li>¡Comienza a explorar la plataforma!</li>
+            <div class="next-steps-title">Pasos a Seguir</div>
+            <ol class="next-steps-list">
+              <li>Ingrese a la plataforma mediante el siguiente enlace institucional</li>
+              <li>Cambie su contraseña temporal por una contraseña segura y personal</li>
+              <li>Complete los datos de su perfil academico</li>
+              <li>Revise su horario y asignaturas correspondientes</li>
             </ol>
             
-            <center>
-              <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}" class="button">Acceder a la Plataforma</a>
-            </center>
+            <div class="button-container">
+              <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}" class="button">Acceder al Sistema</a>
+            </div>
             
-            <p>Si tienes alguna pregunta o necesitas asistencia, no dudes en contactarnos.</p>
-            
-            <p>¡Que comience tu experiencia académica con nosotros!</p>
+            <p style="color: #6c757d; font-size: 14px; margin-top: 30px;">
+              Para cualquier consulta o asistencia tecnica, contacte a la Oficina de Tecnologias de la Informacion.
+            </p>
           </div>
           
           <div class="footer">
-            <p>© 2026 Plataforma Educativa. Todos los derechos reservados.</p>
-            <p>Este es un email automático, por favor no respondas directamente a este mensaje.</p>
+            <div class="footer-brand">Sistema de Gestion Universitaria</div>
+            <p>© 2026 Todos los derechos reservados.</p>
+            <p>Este correo es generado automaticamente. Por favor no responda a esta direccion.</p>
           </div>
         </div>
       </body>

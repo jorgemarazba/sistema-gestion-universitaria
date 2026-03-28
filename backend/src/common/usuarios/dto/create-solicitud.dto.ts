@@ -16,6 +16,10 @@ export class CreateSolicitudDto {
   @IsEmail({}, { message: 'Ingresa un correo personal válido' })
   correo_personal: string;
 
+  @IsString()
+  @MinLength(10, { message: 'Teléfono no válido' })
+  telefono: string;
+
   @IsEnum(['estudiante', 'docente'], {
     message: 'Tipo de usuario debe ser estudiante o docente',
   })

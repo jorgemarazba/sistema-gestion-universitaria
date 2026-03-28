@@ -46,6 +46,12 @@ export class UsuariosController {
     return this.usuariosService.getPendingSolicitudes();
   }
 
+  @Get('recientes')
+  @ApiOperation({ summary: 'Listar usuarios recientes' })
+  findRecientes() {
+    return this.usuariosService.findRecientes(5);
+  }
+
   @Patch(':id/status')
   @ApiOperation({ summary: 'Aprobar o rechazar una solicitud de usuario' })
   updateStatus(

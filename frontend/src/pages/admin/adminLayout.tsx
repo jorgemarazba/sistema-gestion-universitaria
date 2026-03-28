@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { 
   LayoutDashboard, 
   UserPlus, 
@@ -14,18 +15,85 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 
+const API_URL = 'http://localhost:3002/api/v1';
+
+interface Notificacion {
+  id: string;
+  titulo: string;
+  descripcion: string;
+  tipo: 'pago' | 'ticket' | 'solicitud' | 'sistema';
+  estado: 'pendiente' | 'leida' | 'archivada';
+  creadoEn: string;
+  paraAdmin: boolean;
+}
+
 const AdminLayout: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const logout = useAuthStore((state) => state.logout);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [notificaciones, setNotificaciones] = useState<Notificacion[]>([]);
+  const [contadorNotif, setContadorNotif] = useState(0);
 
-  const notificaciones = [
-    { id: 1, avatar: 'JP', titulo: 'Juan Pérez', descripcion: 'solicitó acceso al sistema', tiempo: '2 h', leida: false, tipo: 'solicitud' },
-    { id: 2, avatar: 'ML', titulo: 'María López', descripcion: 'realizó un pago', tiempo: '5 h', leida: true, tipo: 'pago' },
-    { id: 3, avatar: 'CG', titulo: 'Carlos García', descripcion: 'ticket resuelto', tiempo: '1 d', leida: true, tipo: 'ticket' },
-    { id: 4, avatar: 'AT', titulo: 'Ana Torres', descripcion: 'solicitó matrícula', tiempo: '30 min', leida: false, tipo: 'solicitud' },
-  ];
+  // Cargar notificaciones
+  const cargarNotificaciones = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/notificaciones?admin=true`);
+      const data = response.data;
+      
+      // Asegurar que sea un array
+      const notificacionesArray = Array.isArray(data) ? data : (data.data || []);
+      setNotificaciones(notificacionesArray);
+      
+      // Contar pendientes
+      const pendientes = notificacionesArray.filter((n: Notificacion) => n.estado === 'pendiente').length;
+      setContadorNotif(pendientes);
+    } catch (err) {
+      console.error('Error al cargar notificaciones:', err);
+    }
+  };
+
+  // Cargar al montar
+  useEffect(() => {
+    cargarNotificaciones();
+    // Actualizar cada 30 segundos
+    const interval = setInterval(cargarNotificaciones, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Marcar como leída
+  const marcarComoLeida = async (id: string) => {
+    try {
+      await axios.post(`${API_URL}/notificaciones/${id}/leer`);
+      cargarNotificaciones();
+    } catch (err) {
+      console.error('Error al marcar notificación:', err);
+    }
+  };
+
+  // Marcar todas como leídas
+  const marcarTodasLeidas = async () => {
+    try {
+      await axios.post(`${API_URL}/notificaciones/marcar-todas-leidas`);
+      cargarNotificaciones();
+    } catch (err) {
+      console.error('Error al marcar todas:', err);
+    }
+  };
+
+  // Formatear tiempo relativo
+  const tiempoRelativo = (fecha: string) => {
+    const diff = Date.now() - new Date(fecha).getTime();
+    const minutos = Math.floor(diff / 60000);
+    const horas = Math.floor(minutos / 60);
+    const dias = Math.floor(horas / 24);
+    
+    if (minutos < 1) return 'Ahora';
+    if (minutos < 60) return `${minutos} min`;
+    if (horas < 24) return `${horas} h`;
+    if (dias < 7) return `${dias} d`;
+    return new Date(fecha).toLocaleDateString();
+  };
 
   const menuItems = [
     { name: 'Dashboard', path: '/admin/dashboard', icon: <LayoutDashboard size={20} /> },
@@ -120,7 +188,11 @@ const AdminLayout: React.FC = () => {
                 className="relative p-2 text-white hover:bg-blue-700 rounded-full transition"
               >
                 <Bell size={20} />
-                <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 rounded-full text-xs font-bold flex items-center justify-center">3</span>
+                {contadorNotif > 0 && (
+                  <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 rounded-full text-xs font-bold flex items-center justify-center">
+                    {contadorNotif > 9 ? '9+' : contadorNotif}
+                  </span>
+                )}
               </button>
 
               {/* Dropdown de Notificaciones estilo Facebook */}
@@ -129,45 +201,56 @@ const AdminLayout: React.FC = () => {
                   {/* Header */}
                   <div className="flex justify-between items-center p-4 border-b border-gray-700">
                     <h3 className="text-lg font-bold text-white">Notificaciones</h3>
-                    <button 
-                      onClick={() => setNotifOpen(false)}
-                      className="text-gray-400 hover:text-white text-sm"
-                    >
-                      Marcar todas como leídas
-                    </button>
+                    {contadorNotif > 0 && (
+                      <button 
+                        onClick={marcarTodasLeidas}
+                        className="text-gray-400 hover:text-white text-sm"
+                      >
+                        Marcar todas como leídas
+                      </button>
+                    )}
                   </div>
 
                   {/* Lista de notificaciones */}
                   <div className="py-2">
-                    {notificaciones.map((notif) => (
-                      <div 
-                        key={notif.id} 
-                        className={`flex items-start gap-3 px-4 py-3 hover:bg-[#374151] transition cursor-pointer ${
-                          !notif.leida ? 'bg-[#1e3a5f]/30' : ''
-                        }`}
-                      >
-                        {/* Avatar */}
-                        <div className="relative flex-shrink-0">
-                          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold">
-                            {notif.avatar}
-                          </div>
-                        </div>
-
-                        {/* Contenido */}
-                        <div className="flex-1 min-w-0">
-                          <p className="text-white text-sm leading-snug">
-                            <span className="font-semibold">{notif.titulo}</span>{' '}
-                            <span className="text-gray-300">{notif.descripcion}</span>
-                          </p>
-                          <p className="text-blue-400 text-xs mt-1">{notif.tiempo}</p>
-                        </div>
-
-                        {/* Indicador de no leído */}
-                        {!notif.leida && (
-                          <div className="w-2.5 h-2.5 rounded-full bg-blue-500 flex-shrink-0 mt-2"></div>
-                        )}
+                    {notificaciones.length === 0 ? (
+                      <div className="px-4 py-8 text-center text-gray-400">
+                        No hay notificaciones
                       </div>
-                    ))}
+                    ) : (
+                      notificaciones.map((notif) => (
+                        <div 
+                          key={notif.id} 
+                          onClick={() => marcarComoLeida(notif.id)}
+                          className={`flex items-start gap-3 px-4 py-3 hover:bg-[#374151] transition cursor-pointer ${
+                            notif.estado === 'pendiente' ? 'bg-[#1e3a5f]/30' : ''
+                          }`}
+                        >
+                          <div className="relative shrink-0">
+                            <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold ${
+                              notif.tipo === 'pago' ? 'bg-green-600' :
+                              notif.tipo === 'ticket' ? 'bg-purple-600' :
+                              notif.tipo === 'solicitud' ? 'bg-blue-600' :
+                              'bg-gray-600'
+                            }`}>
+                              {notif.tipo === 'pago' ? 'P' :
+                               notif.tipo === 'ticket' ? 'T' :
+                               notif.tipo === 'solicitud' ? 'S' : 'N'}
+                            </div>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-white text-sm leading-snug">
+                              <span className="font-semibold">{notif.titulo}</span>{' '}
+                              <span className="text-gray-300">{notif.descripcion}</span>
+                            </p>
+                            <p className="text-blue-400 text-xs mt-1">{tiempoRelativo(notif.creadoEn)}</p>
+                          </div>
+                          {notif.estado === 'pendiente' && (
+                            <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shrink-0 mt-2"></div>
+                          )}
+                        </div>
+                      ))
+                    )}
                   </div>
 
                   {/* Footer */}

@@ -8,6 +8,7 @@ import {
   GraduationCap,
   ArrowLeft,
   Loader2,
+  Phone,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { solicitudSchema, type SolicitudFormValues } from './SolicitudCuenta.schema'
@@ -178,6 +179,29 @@ export const SolicitudCuentaPage = () => {
                 {errors.correo_personal && (
                   <p className="mt-1.5 text-xs text-rose-400">
                     {errors.correo_personal.message}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-400">
+                  Teléfono de contacto
+                </label>
+                <div className="relative">
+                  <Phone
+                    className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-500"
+                    aria-hidden
+                  />
+                  <input
+                    {...register('telefono')}
+                    type="tel"
+                    className={inputClass}
+                    placeholder="3001234567"
+                  />
+                </div>
+                {errors.telefono && (
+                  <p className="mt-1.5 text-xs text-rose-400">
+                    {errors.telefono.message}
                   </p>
                 )}
               </div>

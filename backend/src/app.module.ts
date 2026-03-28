@@ -5,6 +5,11 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsuariosModule } from './common/usuarios/usuarios.module';
 import { AuthModule } from './auth/auth.module';
+import { NotificacionesModule } from './common/notificaciones/notificaciones.module';
+import { TicketsModule } from './common/tickets/tickets.module';
+import { PagosModule } from './common/pagos/pagos.module';
+import { CursosModule } from './common/cursos/cursos.module';
+import { ReportesModule } from './common/reportes/reportes.module';
 
 @Module({
   imports: [
@@ -20,7 +25,7 @@ import { AuthModule } from './auth/auth.module';
         password: config.get<string>('DB_PASSWORD'),
         database: config.get<string>('DB_NAME'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: true,
+        synchronize: false,
         ssl: true,
         extra: {
           ssl: {
@@ -31,6 +36,11 @@ import { AuthModule } from './auth/auth.module';
     }),
     UsuariosModule,
     AuthModule,
+    NotificacionesModule,
+    TicketsModule,
+    PagosModule,
+    CursosModule,
+    ReportesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
