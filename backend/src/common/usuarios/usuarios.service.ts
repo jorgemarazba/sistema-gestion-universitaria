@@ -72,13 +72,37 @@ export class UsuariosService {
     return this.usuariosRepo.findOne({ where: { id_usuario: id } });
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- stub pendiente
-  update(id: string, updateUsuarioDto: UpdateUsuarioDto) {
-    return `This action updates a #${id} usuario`;
+  async update(id: string, updateUsuarioDto: UpdateUsuarioDto) {
+    const usuario = await this.usuariosRepo.findOne({ where: { id_usuario: id } });
+    
+    if (!usuario) {
+      throw new BadRequestException('Usuario no encontrado');
+    }
+
+    // Actualizar campos permitidos
+    if (updateUsuarioDto.nombre) usuario.nombre = updateUsuarioDto.nombre;
+    if (updateUsuarioDto.apellido) usuario.apellido = updateUsuarioDto.apellido;
+    if (updateUsuarioDto.telefono !== undefined) usuario.telefono = updateUsuarioDto.telefono;
+    if (updateUsuarioDto.correo_personal !== undefined) usuario.correoPersonal = updateUsuarioDto.correo_personal;
+    if (updateUsuarioDto.rol) usuario.rol = updateUsuarioDto.rol;
+    if (updateUsuarioDto.estado) usuario.estado = updateUsuarioDto.estado;
+
+    const usuarioActualizado = await this.usuariosRepo.save(usuario);
+    
+    // Retornar sin la contraseña
+    const { contrasena, ...usuarioSinPassword } = usuarioActualizado;
+    return usuarioSinPassword;
   }
 
-  remove(id: string) {
-    return `This action removes a #${id} usuario`;
+  async remove(id: string) {
+    const usuario = await this.usuariosRepo.findOne({ where: { id_usuario: id } });
+    
+    if (!usuario) {
+      throw new BadRequestException('Usuario no encontrado');
+    }
+
+    await this.usuariosRepo.remove(usuario);
+    return { message: 'Usuario eliminado exitosamente', id };
   }
 
   // ==================== MÉTODOS PARA ADMIN STATS ====================

@@ -1,20 +1,31 @@
 import { useState, useEffect } from 'react';
-import { Search, Plus, Eye, Edit2, Trash2, Mail, Phone, RefreshCw, X, Send } from 'lucide-react';
+import { Search, Plus, Eye, Edit2, Trash2, Mail, Phone, RefreshCw, X, Send, Shield, AlertTriangle, CheckCircle } from 'lucide-react';
 import axios from 'axios';
 
 const API_URL = 'http://localhost:3002/api/v1';
+
+type Rol = 'estudiante' | 'profesor' | 'administrador';
 
 interface Usuario {
   id_usuario: string;
   nombre: string;
   apellido: string;
-  correo_institucional: string;
-  correo_personal?: string;
+  correoInstitucional: string;
+  correoPersonal?: string;
   telefono?: string;
   documentoIdentidad: string;
-  rol: 'estudiante' | 'profesor' | 'administrador';
+  rol: Rol;
   estado: 'activo' | 'verificacion pendiente' | 'suspendido';
   fechaRegistro: string;
+}
+
+interface FormNuevoUsuario {
+  nombre: string;
+  apellido: string;
+  documentoIdentidad: string;
+  correoPersonal: string;
+  telefono: string;
+  rol: Rol;
 }
 
 const filtros = ['Todos', 'estudiante', 'profesor', 'administrador'] as const;
@@ -29,16 +40,22 @@ export const AdminUsuarios = () => {
   const [mostrarModal, setMostrarModal] = useState(false);
   const [mostrarModalCrear, setMostrarModalCrear] = useState(false);
   const [creandoUsuario, setCreandoUsuario] = useState(false);
-  const [formNuevoUsuario, setFormNuevoUsuario] = useState({
+  const [formNuevoUsuario, setFormNuevoUsuario] = useState<FormNuevoUsuario>({
     nombre: '',
     apellido: '',
     documentoIdentidad: '',
-    correo_personal: '',
+    correoPersonal: '',
     telefono: '',
-    rol: 'estudiante' as const,
+    rol: 'estudiante',
   });
   const [reenviando, setReenviando] = useState(false);
   const [mensajeExito, setMensajeExito] = useState('');
+  const [mostrarModalEditar, setMostrarModalEditar] = useState(false);
+  const [usuarioEditando, setUsuarioEditando] = useState<Usuario | null>(null);
+  const [editandoUsuario, setEditandoUsuario] = useState(false);
+  const [mostrarConfirmacionEliminar, setMostrarConfirmacionEliminar] = useState(false);
+  const [usuarioEliminando, setUsuarioEliminando] = useState<Usuario | null>(null);
+  const [eliminandoUsuario, setEliminandoUsuario] = useState(false);
 
   const cargarUsuarios = async () => {
     try {
@@ -61,7 +78,7 @@ export const AdminUsuarios = () => {
     const coincideBusqueda = 
       usuario.nombre?.toLowerCase().includes(busqueda.toLowerCase()) ||
       usuario.apellido?.toLowerCase().includes(busqueda.toLowerCase()) ||
-      usuario.correo_institucional?.toLowerCase().includes(busqueda.toLowerCase()) ||
+      usuario.correoInstitucional?.toLowerCase().includes(busqueda.toLowerCase()) ||
       usuario.documentoIdentidad?.includes(busqueda);
     
     const coincideFiltro = filtroActivo === 'Todos' || 
@@ -116,7 +133,7 @@ export const AdminUsuarios = () => {
         nombre: formNuevoUsuario.nombre,
         apellido: formNuevoUsuario.apellido,
         documentoIdentidad: formNuevoUsuario.documentoIdentidad,
-        correoPersonal: formNuevoUsuario.correo_personal,
+        correoPersonal: formNuevoUsuario.correoPersonal,
         telefono: formNuevoUsuario.telefono,
         rol: formNuevoUsuario.rol,
         estado: 'activo',
@@ -126,7 +143,7 @@ export const AdminUsuarios = () => {
         nombre: '',
         apellido: '',
         documentoIdentidad: '',
-        correo_personal: '',
+        correoPersonal: '',
         telefono: '',
         rol: 'estudiante',
       });
@@ -141,6 +158,66 @@ export const AdminUsuarios = () => {
     }
   };
 
+  // Función para abrir modal de edición
+  const abrirModalEditar = (usuario: Usuario) => {
+    setUsuarioEditando(usuario);
+    setMostrarModalEditar(true);
+  };
+
+  // Función para editar usuario
+  const handleEditarUsuario = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!usuarioEditando) return;
+    
+    try {
+      setEditandoUsuario(true);
+      await axios.patch(`${API_URL}/usuarios/${usuarioEditando.id_usuario}`, {
+        nombre: usuarioEditando.nombre,
+        apellido: usuarioEditando.apellido,
+        telefono: usuarioEditando.telefono,
+        correoPersonal: usuarioEditando.correoPersonal,
+        rol: usuarioEditando.rol,
+        estado: usuarioEditando.estado,
+      });
+      
+      cargarUsuarios();
+      setMensajeExito('Usuario actualizado exitosamente');
+      setTimeout(() => setMensajeExito(''), 3000);
+      setMostrarModalEditar(false);
+    } catch (err) {
+      console.error('Error al editar usuario:', err);
+      alert('Error al editar usuario');
+    } finally {
+      setEditandoUsuario(false);
+    }
+  };
+
+  // Función para confirmar eliminación
+  const confirmarEliminar = (usuario: Usuario) => {
+    setUsuarioEliminando(usuario);
+    setMostrarConfirmacionEliminar(true);
+  };
+
+  // Función para eliminar usuario
+  const handleEliminarUsuario = async () => {
+    if (!usuarioEliminando) return;
+    
+    try {
+      setEliminandoUsuario(true);
+      await axios.delete(`${API_URL}/usuarios/${usuarioEliminando.id_usuario}`);
+      
+      cargarUsuarios();
+      setMensajeExito('Usuario eliminado exitosamente');
+      setTimeout(() => setMensajeExito(''), 3000);
+      setMostrarConfirmacionEliminar(false);
+    } catch (err) {
+      console.error('Error al eliminar usuario:', err);
+      alert('Error al eliminar usuario');
+    } finally {
+      setEliminandoUsuario(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#0a1628] p-6 max-w-7xl mx-auto">
       <div className="flex justify-between items-start mb-6">
@@ -148,23 +225,14 @@ export const AdminUsuarios = () => {
           <h1 className="text-2xl font-bold text-white">Gestión de Usuarios</h1>
           <p className="text-sm mt-1 font-medium text-gray-300">Administra los usuarios del sistema</p>
         </div>
-        <div className="flex gap-3">
-          <button 
-            onClick={cargarUsuarios}
-            disabled={loading}
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-slate-700 hover:bg-slate-50 transition disabled:opacity-50"
-          >
-            <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
-            <span>Actualizar</span>
-          </button>
-          <button 
-            onClick={() => setMostrarModalCrear(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-          >
-            <Plus size={18} />
-            <span>Nuevo Usuario</span>
-          </button>
-        </div>
+        <button 
+          onClick={cargarUsuarios}
+          disabled={loading}
+          className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-slate-700 hover:bg-slate-50 transition disabled:opacity-50"
+        >
+          <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
+          <span>Actualizar</span>
+        </button>
       </div>
 
       <div className="bg-[#374151] rounded-xl shadow-lg border border-gray-600 p-4 mb-6">
@@ -229,7 +297,7 @@ export const AdminUsuarios = () => {
                     <div className="flex flex-col gap-1">
                       <div className="flex items-center gap-1 text-sm text-gray-300">
                         <Mail size={14} />
-                        {usuario.correo_institucional || 'N/A'}
+                        {usuario.correoInstitucional || 'N/A'}
                       </div>
                       <div className="flex items-center gap-1 text-sm text-gray-400">
                         <Phone size={14} />
@@ -259,10 +327,18 @@ export const AdminUsuarios = () => {
                       >
                         <Eye size={16} />
                       </button>
-                      <button className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded transition">
+                      <button 
+                        onClick={() => abrirModalEditar(usuario)}
+                        className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded transition"
+                        title="Editar usuario"
+                      >
                         <Edit2 size={16} />
                       </button>
-                      <button className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition">
+                      <button 
+                        onClick={() => confirmarEliminar(usuario)}
+                        className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition"
+                        title="Eliminar usuario"
+                      >
                         <Trash2 size={16} />
                       </button>
                     </div>
@@ -274,62 +350,86 @@ export const AdminUsuarios = () => {
         </div>
       </div>
 
-      {/* Modal de Detalles */}
+      {/* Modal de Detalles - Estilo glassmorphism con fondo transparente */}
       {mostrarModal && usuarioSeleccionado && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-[#374151] rounded-xl shadow-2xl border border-gray-600 max-w-md w-full">
-            <div className="px-6 py-4 border-b border-gray-600 flex justify-between items-center">
-              <h3 className="text-lg font-bold text-white">Credenciales del Usuario</h3>
-              <button onClick={() => setMostrarModal(false)} className="text-gray-400 hover:text-white">
-                <X size={20} />
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-[#1f2937]/95 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-500/50 max-w-md w-full overflow-hidden">
+            {/* Header con gradiente */}
+            <div className="bg-linear-to-r from-blue-600 to-blue-800 px-6 py-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                  <Shield className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">Credenciales</h3>
+                  <p className="text-blue-200 text-xs">Acceso Institucional</p>
+                </div>
+              </div>
+              <button onClick={() => setMostrarModal(false)} className="text-white/80 hover:text-white transition">
+                <X size={24} />
               </button>
             </div>
             
-            <div className="p-6 space-y-4">
-              <div>
-                <label className="text-sm text-gray-400">Nombre Completo</label>
-                <p className="text-white font-medium">{usuarioSeleccionado.nombre} {usuarioSeleccionado.apellido}</p>
+            {/* Contenido con mejor organización */}
+            <div className="p-6 space-y-5">
+              {/* Info del usuario */}
+              <div className="flex items-center gap-4 pb-4 border-b border-gray-600">
+                <div className="w-14 h-14 bg-blue-600 rounded-full flex items-center justify-center text-white text-xl font-bold">
+                  {usuarioSeleccionado.nombre?.charAt(0)}{usuarioSeleccionado.apellido?.charAt(0)}
+                </div>
+                <div>
+                  <p className="text-white font-semibold text-lg">{usuarioSeleccionado.nombre} {usuarioSeleccionado.apellido}</p>
+                  <p className="text-gray-400 text-sm capitalize">{usuarioSeleccionado.rol}</p>
+                </div>
               </div>
               
-              <div>
-                <label className="text-sm text-gray-400">Correo Institucional</label>
-                <div className="flex items-center gap-2">
-                  <p className="text-white font-medium font-mono bg-slate-800 p-2 rounded flex-1">{usuarioSeleccionado.correo_institucional}</p>
+              {/* Correo Institucional destacado */}
+              <div className="bg-blue-900/30 border border-blue-500/30 rounded-xl p-4">
+                <label className="text-xs text-blue-300 uppercase tracking-wider font-semibold">Correo Institucional</label>
+                <div className="flex items-center gap-2 mt-2">
+                  <Mail size={18} className="text-blue-400" />
+                  <p className="text-white font-mono text-sm">{usuarioSeleccionado.correoInstitucional}</p>
                 </div>
               </div>
 
-              {usuarioSeleccionado.correo_personal && (
-                <div>
-                  <label className="text-sm text-gray-400">Correo Personal</label>
-                  <p className="text-white">{usuarioSeleccionado.correo_personal}</p>
+              {usuarioSeleccionado.correoPersonal && (
+                <div className="bg-gray-700/50 rounded-lg p-3">
+                  <label className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Correo Personal</label>
+                  <p className="text-gray-300 text-sm mt-1">{usuarioSeleccionado.correoPersonal}</p>
                 </div>
               )}
 
-              <div className="bg-yellow-900 border border-yellow-700 p-3 rounded">
-                <p className="text-yellow-300 text-sm">
-                  <strong>⚠️ Nota:</strong> La contraseña temporal solo se muestra al momento de aprobar la solicitud. 
-                  Si el usuario no la recibió por email, puedes reenviar las credenciales.
-                </p>
+              {/* Alerta mejorada */}
+              <div className="bg-amber-900/40 border border-amber-600/40 rounded-xl p-4">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle size={20} className="text-amber-400 shrink-0 mt-0.5" />
+                  <p className="text-amber-200 text-sm leading-relaxed">
+                    La contraseña temporal solo se muestra al momento de aprobar la solicitud. Si el usuario no la recibió, puedes reenviar las credenciales.
+                  </p>
+                </div>
               </div>
 
+// ... (rest of the code remains the same)
               {mensajeExito && (
-                <div className="bg-green-900 border border-green-700 text-green-300 p-3 rounded">
+                <div className="bg-green-900/50 border border-green-500/40 text-green-300 p-3 rounded-lg flex items-center gap-2">
+                  <CheckCircle size={18} />
                   {mensajeExito}
                 </div>
               )}
 
-              <div className="pt-4 flex gap-3">
+              {/* Botones */}
+              <div className="pt-2 flex gap-3">
                 <button
                   onClick={reenviarCredenciales}
                   disabled={reenviando}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-linear-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition font-medium shadow-lg shadow-blue-900/30 disabled:opacity-50"
                 >
                   <Send size={18} />
                   {reenviando ? 'Enviando...' : 'Reenviar Credenciales'}
                 </button>
                 <button
                   onClick={() => setMostrarModal(false)}
-                  className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition"
+                  className="px-6 py-3 bg-gray-700 text-gray-300 rounded-xl hover:bg-gray-600 transition font-medium"
                 >
                   Cerrar
                 </button>
@@ -389,8 +489,8 @@ export const AdminUsuarios = () => {
                 <label className="text-sm text-gray-400 mb-1 block">Correo Personal</label>
                 <input
                   type="email"
-                  value={formNuevoUsuario.correo_personal}
-                  onChange={(e) => setFormNuevoUsuario({...formNuevoUsuario, correo_personal: e.target.value})}
+                  value={formNuevoUsuario.correoPersonal}
+                  onChange={(e) => setFormNuevoUsuario({...formNuevoUsuario, correoPersonal: e.target.value})}
                   className="w-full px-3 py-2 bg-slate-800 border border-gray-600 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
@@ -411,7 +511,7 @@ export const AdminUsuarios = () => {
                 <label className="text-sm text-gray-400 mb-1 block">Rol</label>
                 <select
                   value={formNuevoUsuario.rol}
-                  onChange={(e) => setFormNuevoUsuario({...formNuevoUsuario, rol: e.target.value as 'estudiante' | 'profesor' | 'administrador'})}
+                  onChange={(e) => setFormNuevoUsuario({...formNuevoUsuario, rol: e.target.value as Rol})}
                   className="w-full px-3 py-2 bg-slate-800 border border-gray-600 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="estudiante">Estudiante</option>
@@ -447,6 +547,184 @@ export const AdminUsuarios = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========== MODAL: EDITAR USUARIO ========== */}
+      {mostrarModalEditar && usuarioEditando && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-[#1f2937] rounded-2xl shadow-2xl w-full max-w-lg border border-gray-600 overflow-hidden">
+            {/* Header */}
+            <div className="bg-linear-to-r from-blue-700 to-blue-900 px-6 py-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                  <Edit2 className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">Editar Usuario</h3>
+                  <p className="text-blue-200 text-xs">Modificar datos del usuario</p>
+                </div>
+              </div>
+              <button onClick={() => setMostrarModalEditar(false)} className="text-white/80 hover:text-white transition">
+                <X size={24} />
+              </button>
+            </div>
+            {/* Formulario */}
+            <form onSubmit={handleEditarUsuario} className="p-6 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">Nombre</label>
+                  <input 
+                    type="text" 
+                    value={usuarioEditando.nombre}
+                    onChange={(e) => setUsuarioEditando({...usuarioEditando, nombre: e.target.value})}
+                    className="w-full px-3 py-2 bg-[#374151] border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">Apellido</label>
+                  <input 
+                    type="text" 
+                    value={usuarioEditando.apellido}
+                    onChange={(e) => setUsuarioEditando({...usuarioEditando, apellido: e.target.value})}
+                    className="w-full px-3 py-2 bg-[#374151] border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-1">Teléfono</label>
+                <input 
+                  type="text" 
+                  value={usuarioEditando.telefono || ''}
+                  onChange={(e) => setUsuarioEditando({...usuarioEditando, telefono: e.target.value})}
+                  className="w-full px-3 py-2 bg-[#374151] border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-1">Correo Personal</label>
+                <input 
+                  type="email" 
+                  value={usuarioEditando.correoPersonal || ''}
+                  onChange={(e) => setUsuarioEditando({...usuarioEditando, correoPersonal: e.target.value})}
+                  className="w-full px-3 py-2 bg-[#374151] border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                />
+              </div>
+              {usuarioEditando.correoInstitucional && (
+                <div className="bg-blue-900/30 border border-blue-500/30 rounded-lg p-3">
+                  <label className="block text-xs font-medium text-blue-300 mb-1 uppercase tracking-wider">Correo Institucional</label>
+                  <p className="text-blue-200 text-sm">{usuarioEditando.correoInstitucional}</p>
+                </div>
+              )}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">Rol</label>
+                  <select 
+                    value={usuarioEditando.rol}
+                    onChange={(e) => setUsuarioEditando({...usuarioEditando, rol: e.target.value as Rol})}
+                    className="w-full px-3 py-2 bg-[#374151] border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                  >
+                    <option value="estudiante">Estudiante</option>
+                    <option value="profesor">Profesor</option>
+                    <option value="administrador">Administrador</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">Estado</label>
+                  <select 
+                    value={usuarioEditando.estado}
+                    onChange={(e) => setUsuarioEditando({...usuarioEditando, estado: e.target.value as Usuario['estado']})}
+                    className="w-full px-3 py-2 bg-[#374151] border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                  >
+                    <option value="activo">Activo</option>
+                    <option value="verificacion pendiente">Verificación Pendiente</option>
+                    <option value="suspendido">Suspendido</option>
+                  </select>
+                </div>
+              </div>
+              {/* Botones */}
+              <div className="pt-4 flex gap-3">
+                <button
+                  type="submit"
+                  disabled={editandoUsuario}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-linear-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition font-medium shadow-lg shadow-blue-900/30 disabled:opacity-50"
+                >
+                  {editandoUsuario ? (
+                    <>
+                      <RefreshCw size={18} className="animate-spin" />
+                      Guardando...
+                    </>
+                  ) : (
+                    'Guardar Cambios'
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMostrarModalEditar(false)}
+                  className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition font-medium"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========== MODAL: CONFIRMAR ELIMINAR ========== */}
+      {mostrarConfirmacionEliminar && usuarioEliminando && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-[#1f2937] rounded-2xl shadow-2xl w-full max-w-md border border-gray-600 overflow-hidden">
+            {/* Header */}
+            <div className="bg-linear-to-r from-red-600 to-red-800 px-6 py-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                  <Trash2 className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">Eliminar Usuario</h3>
+                  <p className="text-red-200 text-xs">Esta acción no se puede deshacer</p>
+                </div>
+              </div>
+              <button onClick={() => setMostrarConfirmacionEliminar(false)} className="text-white/80 hover:text-white transition">
+                <X size={24} />
+              </button>
+            </div>
+            {/* Contenido */}
+            <div className="p-6 space-y-4">
+              <p className="text-gray-300 text-center">
+                ¿Estás seguro de que deseas eliminar al usuario <strong className="text-white">{usuarioEliminando.nombre} {usuarioEliminando.apellido}</strong>?
+              </p>
+              <p className="text-red-400 text-sm text-center">
+                Esta acción eliminará permanentemente todos los datos del usuario.
+              </p>
+              {/* Botones */}
+              <div className="pt-4 flex gap-3">
+                <button
+                  onClick={() => setMostrarConfirmacionEliminar(false)}
+                  className="flex-1 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition font-medium"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleEliminarUsuario}
+                  disabled={eliminandoUsuario}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-linear-to-r from-red-600 to-red-700 text-white rounded-lg hover:from-red-700 hover:to-red-800 transition font-medium shadow-lg shadow-red-900/30 disabled:opacity-50"
+                >
+                  {eliminandoUsuario ? (
+                    <>
+                      <RefreshCw size={18} className="animate-spin" />
+                      Eliminando...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 size={18} />
+                      Eliminar
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

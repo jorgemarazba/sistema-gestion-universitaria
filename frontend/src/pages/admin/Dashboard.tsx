@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { 
-  Users, 
-  BookOpen, 
-  Bell, 
-  BarChart3,
+  UserPlus, 
+  GraduationCap, 
+  Send, 
+  FileText,
   CheckCircle,
   Clock,
   X
@@ -354,48 +354,48 @@ export const AdminDashboard = () => {
       <div className="bg-[#374151] rounded-lg shadow-lg border border-gray-600 p-6">
         <h2 className="text-lg font-bold mb-6 text-white">Acciones Rápidas</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <button 
+          <button
             onClick={() => setModalUsuario(true)}
             className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-500 rounded-lg hover:border-blue-400 hover:bg-gray-600 transition cursor-pointer"
           >
-            <Users size={24} className="text-blue-400 mb-3" />
+            <UserPlus size={24} className="text-blue-400 mb-3" />
             <span className="text-sm font-semibold text-gray-200">Nuevo Usuario</span>
           </button>
-          <button 
+          <button
             onClick={() => setModalCurso(true)}
             className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-500 rounded-lg hover:border-green-400 hover:bg-gray-600 transition cursor-pointer"
           >
-            <BookOpen size={24} className="text-green-400 mb-3" />
+            <GraduationCap size={24} className="text-green-400 mb-3" />
             <span className="text-sm font-semibold text-gray-200">Nuevo Curso</span>
           </button>
-          <button 
+          <button
             onClick={() => setModalNotificacion(true)}
             className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-500 rounded-lg hover:border-purple-400 hover:bg-gray-600 transition cursor-pointer"
           >
-            <Bell size={24} className="text-purple-400 mb-3" />
+            <Send size={24} className="text-purple-400 mb-3" />
             <span className="text-sm font-semibold text-gray-200">Enviar Notificación</span>
           </button>
-          <button 
+          <button
             onClick={() => setModalReporte(true)}
             className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-500 rounded-lg hover:border-orange-400 hover:bg-gray-600 transition cursor-pointer"
           >
-            <BarChart3 size={24} className="text-orange-400 mb-3" />
+            <FileText size={24} className="text-orange-400 mb-3" />
             <span className="text-sm font-semibold text-gray-200">Generar Reporte</span>
           </button>
         </div>
       </div>
       {/* ========== MODAL: NUEVO USUARIO ========== */}
       {modalUsuario && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-[#374151] rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200 border border-gray-600">
             {/* Header universitario */}
             <div className="bg-linear-to-r from-blue-700 to-blue-900 px-6 py-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                  <Users className="w-5 h-5 text-white" />
+                  <UserPlus className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-white">Nuevo Usuario</h3>
+                  <h3 className="text-lg font-bold text-white">Crear Nuevo Usuario</h3>
                   <p className="text-blue-200 text-xs">Sistema Universitario</p>
                 </div>
               </div>
@@ -407,53 +407,45 @@ export const AdminDashboard = () => {
             <div className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">Nombre</label>
-                  <input type="text" placeholder="Ej: María" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition" />
+                  <label className="block text-sm font-medium text-gray-400 mb-1">Nombre</label>
+                  <input type="text" className="w-full px-3 py-2 bg-[#1f2937] border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition" />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">Apellido</label>
-                  <input type="text" placeholder="Ej: García" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition" />
+                  <label className="block text-sm font-medium text-gray-400 mb-1">Apellido</label>
+                  <input type="text" className="w-full px-3 py-2 bg-[#1f2937] border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition" />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Documento de Identidad</label>
-                <input type="text" placeholder="Ej: 1234567890" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition" />
+                <label className="block text-sm font-medium text-gray-400 mb-1">Documento de Identidad</label>
+                <input type="text" className="w-full px-3 py-2 bg-[#1f2937] border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition" />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Correo Personal</label>
-                <input type="email" placeholder="Ej: usuario@email.com" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition" />
+                <label className="block text-sm font-medium text-gray-400 mb-1">Correo Personal</label>
+                <input type="email" className="w-full px-3 py-2 bg-[#1f2937] border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition" />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">Tipo de Usuario</label>
-                  <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition bg-white">
-                    <option value="">Seleccionar...</option>
-                    <option value="estudiante">Estudiante</option>
-                    <option value="profesor">Profesor</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">Carrera / Departamento</label>
-                  <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition bg-white">
-                    <option value="">Seleccionar...</option>
-                    <option value="ingenieria">Ingeniería</option>
-                    <option value="medicina">Medicina</option>
-                    <option value="derecho">Derecho</option>
-                    <option value="administracion">Administración</option>
-                  </select>
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-1">Teléfono</label>
+                <input type="text" className="w-full px-3 py-2 bg-[#1f2937] border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-1">Rol</label>
+                <select className="w-full px-3 py-2 bg-[#1f2937] border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition">
+                  <option value="estudiante">Estudiante</option>
+                  <option value="profesor">Profesor</option>
+                  <option value="administrador">Administrador</option>
+                </select>
               </div>
               {/* Preview del correo institucional */}
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                <p className="text-sm text-blue-800 font-medium">Correo institucional que se generará:</p>
-                <p className="text-sm text-blue-600">mgarcia@universidad.edu.co</p>
+              <div className="bg-blue-900/30 border border-blue-700/50 rounded-lg p-3">
+                <p className="text-sm text-blue-300 font-medium">Correo institucional que se generará:</p>
+                <p className="text-sm text-blue-400">usuario@universidad.edu.co</p>
               </div>
               {/* Botones */}
               <div className="flex gap-3 pt-4">
-                <button onClick={() => setModalUsuario(false)} className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-medium">
+                <button onClick={() => setModalUsuario(false)} className="flex-1 px-4 py-2 border border-gray-500 text-gray-300 rounded-lg hover:bg-gray-700 transition font-medium">
                   Cancelar
                 </button>
-                <button className="flex-1 px-4 py-2 bg-linear-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition font-medium shadow-lg shadow-blue-200">
+                <button className="flex-1 px-4 py-2 bg-linear-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition font-medium shadow-lg shadow-blue-900/30">
                   Crear Usuario
                 </button>
               </div>
@@ -470,7 +462,7 @@ export const AdminDashboard = () => {
             <div className="bg-linear-to-r from-green-600 to-green-800 px-6 py-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                  <BookOpen className="w-5 h-5 text-white" />
+                  <GraduationCap className="w-5 h-5 text-white" />
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-white">Nuevo Curso</h3>
@@ -556,7 +548,7 @@ export const AdminDashboard = () => {
             <div className="bg-linear-to-r from-purple-600 to-purple-800 px-6 py-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                  <Bell className="w-5 h-5 text-white" />
+                  <Send className="w-5 h-5 text-white" />
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-white">Enviar Notificación</h3>
@@ -625,7 +617,7 @@ export const AdminDashboard = () => {
             <div className="bg-linear-to-r from-orange-500 to-orange-700 px-6 py-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                  <BarChart3 className="w-5 h-5 text-white" />
+                  <FileText className="w-5 h-5 text-white" />
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-white">Generar Reporte</h3>
