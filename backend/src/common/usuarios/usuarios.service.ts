@@ -59,9 +59,59 @@ export class UsuariosService {
     return usuarioGuardado;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- stub pendiente
-  create(createUsuarioDto: CreateUsuarioDto) {
-    return 'This action adds a new usuario';
+  async create(createUsuarioDto: CreateUsuarioDto) {
+    // Verificar si ya existe un usuario con el mismo documento o correo
+    const existe = await this.usuariosRepo.findOne({
+      where: [
+        { documentoIdentidad: createUsuarioDto.documentoIdentidad },
+        { correoPersonal: createUsuarioDto.correoPersonal },
+      ],
+    });
+
+    if (existe) {
+      throw new BadRequestException(
+        'Ya existe un usuario con este documento o correo personal.',
+      );
+    }
+
+    // Generar correo institucional y contraseña temporal
+    if (!createUsuarioDto.nombre || !createUsuarioDto.apellido) {
+      throw new BadRequestException('Nombre y apellido son requeridos');
+    }
+    const correoInstitucional = generarCorreoInstitucional(
+      createUsuarioDto.nombre,
+      createUsuarioDto.apellido,
+    );
+    const contrasenaTemporal = generarContrasenaTemporal();
+    const hashedPassword = await bcrypt.hash(contrasenaTemporal, 10);
+
+    // Crear el usuario
+    const nuevoUsuario = this.usuariosRepo.create({
+      nombre: createUsuarioDto.nombre,
+      apellido: createUsuarioDto.apellido,
+      documentoIdentidad: createUsuarioDto.documentoIdentidad,
+      correoPersonal: createUsuarioDto.correoPersonal,
+      correoInstitucional: correoInstitucional,
+      telefono: createUsuarioDto.telefono,
+      contrasena: hashedPassword,
+      rol: createUsuarioDto.rol || 'estudiante',
+      estado: createUsuarioDto.estado || 'activo',
+    });
+
+    const usuarioGuardado = await this.usuariosRepo.save(nuevoUsuario);
+
+    // Enviar correo con credenciales
+    await this.mailService.enviarCredenciales(
+      createUsuarioDto.correoPersonal || '',
+      createUsuarioDto.nombre,
+      createUsuarioDto.apellido,
+      correoInstitucional,
+      contrasenaTemporal,
+    );
+
+    // Retornar sin la contraseña
+    const { contrasena, ...usuarioSinPassword } = usuarioGuardado;
+    return usuarioSinPassword;
   }
 
   findAll() {
@@ -83,7 +133,7 @@ export class UsuariosService {
     if (updateUsuarioDto.nombre) usuario.nombre = updateUsuarioDto.nombre;
     if (updateUsuarioDto.apellido) usuario.apellido = updateUsuarioDto.apellido;
     if (updateUsuarioDto.telefono !== undefined) usuario.telefono = updateUsuarioDto.telefono;
-    if (updateUsuarioDto.correo_personal !== undefined) usuario.correoPersonal = updateUsuarioDto.correo_personal;
+    if (updateUsuarioDto.correoPersonal !== undefined) usuario.correoPersonal = updateUsuarioDto.correoPersonal;
     if (updateUsuarioDto.rol) usuario.rol = updateUsuarioDto.rol;
     if (updateUsuarioDto.estado) usuario.estado = updateUsuarioDto.estado;
 

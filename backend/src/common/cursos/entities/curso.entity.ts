@@ -12,6 +12,12 @@ export enum EstadoCurso {
   EN_PLANEACION = 'en_planeacion',
 }
 
+export enum ModalidadCurso {
+  PRESENCIAL = 'presencial',
+  VIRTUAL = 'virtual',
+  HIBRIDO = 'hibrido',
+}
+
 @Entity('cursos')
 export class Curso {
   @PrimaryGeneratedColumn('uuid')
@@ -41,12 +47,21 @@ export class Curso {
   @Column({ type: 'int', nullable: true })
   semestre: number;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, name: 'profesor_id' })
   profesorId: string;
 
-  @CreateDateColumn()
+  @Column({ nullable: true, name: 'programa_id' })
+  programaId: string;
+
+  @Column({ type: 'enum', enum: ModalidadCurso, default: ModalidadCurso.PRESENCIAL })
+  modalidad: ModalidadCurso;
+
+  @Column({ type: 'int', nullable: true, default: 0 })
+  cupos: number;
+
+  @CreateDateColumn({ name: 'creado_en' })
   creadoEn: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ name: 'actualizado_en' })
   actualizadoEn: Date;
 }

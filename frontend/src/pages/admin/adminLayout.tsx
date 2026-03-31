@@ -11,11 +11,11 @@ import {
   CreditCard,
   Ticket,
   BarChart3,
-  Bell
+  Bell,
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 
-const API_URL = 'http://localhost:3002/api/v1';
+const API_URL = 'http://localhost:3003/api/v1';
 
 interface Notificacion {
   id: string;
@@ -31,9 +31,47 @@ const AdminLayout: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const logout = useAuthStore((state) => state.logout);
+  const user = useAuthStore((state) => state.user);
   const [notifOpen, setNotifOpen] = useState(false);
   const [notificaciones, setNotificaciones] = useState<Notificacion[]>([]);
   const [contadorNotif, setContadorNotif] = useState(0);
+
+  // Determinar colores según el rol
+  const getRoleColors = () => {
+    const rol = user?.rol?.toLowerCase();
+    switch (rol) {
+      case 'estudiante':
+        return {
+          header: 'bg-blue-600 border-blue-500',
+          hover: 'hover:bg-blue-700',
+          avatar: 'bg-blue-500',
+          label: 'Estudiante'
+        };
+      case 'profesor':
+        return {
+          header: 'bg-cyan-600 border-cyan-500',
+          hover: 'hover:bg-cyan-700',
+          avatar: 'bg-cyan-500',
+          label: 'Profesor'
+        };
+      case 'administrador':
+        return {
+          header: 'bg-purple-600 border-purple-500',
+          hover: 'hover:bg-purple-700',
+          avatar: 'bg-purple-500',
+          label: 'Administrador'
+        };
+      default:
+        return {
+          header: 'bg-blue-600 border-blue-500',
+          hover: 'hover:bg-blue-700',
+          avatar: 'bg-blue-500',
+          label: 'Usuario'
+        };
+    }
+  };
+
+  const colors = getRoleColors();
 
   // Cargar notificaciones
   const cargarNotificaciones = async () => {
@@ -175,7 +213,7 @@ const AdminLayout: React.FC = () => {
       </aside>
 
       <main className="flex-1 flex flex-col overflow-hidden">
-        <header className="h-16 bg-blue-600 border-b border-blue-500 flex items-center justify-between px-8 sticky top-0 z-50 shadow-lg">
+        <header className={`h-16 ${colors.header} flex items-center justify-between px-8 sticky top-0 z-50 shadow-lg`}>
           <div className="flex items-center gap-3">
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
             <span className="text-xs text-gray-400 font-medium">Sistema en línea</span>
@@ -185,7 +223,7 @@ const AdminLayout: React.FC = () => {
             <div className="relative">
               <button 
                 onClick={() => setNotifOpen(!notifOpen)}
-                className="relative p-2 text-white hover:bg-blue-700 rounded-full transition"
+                className={`relative p-2 text-white ${colors.hover} rounded-full transition`}
               >
                 <Bell size={20} />
                 {contadorNotif > 0 && (
@@ -263,8 +301,10 @@ const AdminLayout: React.FC = () => {
               )}
             </div>
 
-            <span className="text-sm text-white font-medium">Administrador</span>
-            <div className="h-9 w-9 bg-gray-700 rounded-full flex items-center justify-center text-white font-bold border border-gray-600 shadow-lg">A</div>
+            <span className="text-sm text-white font-medium">{colors.label}</span>
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm ${colors.avatar}`}>
+              {user?.nombre?.charAt(0)?.toUpperCase() || 'A'}
+            </div>
           </div>
         </header>
 

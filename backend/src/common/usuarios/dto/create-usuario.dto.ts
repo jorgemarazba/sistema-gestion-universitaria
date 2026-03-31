@@ -1,26 +1,26 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsOptional } from 'class-validator';
+import { IsString, IsOptional, IsNotEmpty } from 'class-validator';
 
 export class CreateUsuarioDto {
   @ApiPropertyOptional({ description: 'Nombre del usuario' })
   @IsString()
-  @IsOptional()
-  nombre?: string;
+  @IsNotEmpty()
+  nombre: string;
 
   @ApiPropertyOptional({ description: 'Apellido del usuario' })
   @IsString()
-  @IsOptional()
-  apellido?: string;
+  @IsNotEmpty()
+  apellido: string;
 
   @ApiPropertyOptional({ description: 'Documento de identidad' })
   @IsString()
-  @IsOptional()
-  documentoIdentidad?: string;
+  @IsNotEmpty()
+  documentoIdentidad: string;
 
   @ApiPropertyOptional({ description: 'Correo personal del usuario' })
   @IsString()
-  @IsOptional()
-  correo_personal?: string;
+  @IsNotEmpty()
+  correoPersonal: string;
 
   @ApiPropertyOptional({ description: 'Teléfono del usuario' })
   @IsString()

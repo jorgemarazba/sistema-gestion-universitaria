@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Search, Plus, Eye, Edit2, Trash2, Mail, Phone, RefreshCw, X, Send, Shield, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Search, Plus, Eye, Edit2, Trash2, Mail, Phone, RefreshCw, X, Send, Shield, AlertTriangle, CheckCircle, Users } from 'lucide-react';
 import axios from 'axios';
 
-const API_URL = 'http://localhost:3002/api/v1';
+const API_URL = 'http://localhost:3003/api/v1';
 
 type Rol = 'estudiante' | 'profesor' | 'administrador';
 
@@ -268,7 +268,7 @@ export const AdminUsuarios = () => {
       <div className="bg-[#374151] rounded-xl shadow-lg border border-gray-600 overflow-hidden">
         <div className="px-6 py-4 border-b border-slate-200">
           <h2 className="text-lg font-bold flex items-center gap-2 text-white">
-            <span>👥</span>
+            <Users size={20} className="text-blue-400" />
             Lista de Usuarios ({usuariosFiltrados.length})
           </h2>
         </div>
@@ -374,7 +374,12 @@ export const AdminUsuarios = () => {
             <div className="p-6 space-y-5">
               {/* Info del usuario */}
               <div className="flex items-center gap-4 pb-4 border-b border-gray-600">
-                <div className="w-14 h-14 bg-blue-600 rounded-full flex items-center justify-center text-white text-xl font-bold">
+                <div className={`w-14 h-14 rounded-full flex items-center justify-center text-white text-xl font-bold ${
+                  usuarioSeleccionado.rol === 'estudiante' ? 'bg-blue-600' :
+                  usuarioSeleccionado.rol === 'profesor' ? 'bg-cyan-500' :
+                  usuarioSeleccionado.rol === 'administrador' ? 'bg-purple-500' :
+                  'bg-blue-600'
+                }`}>
                   {usuarioSeleccionado.nombre?.charAt(0)}{usuarioSeleccionado.apellido?.charAt(0)}
                 </div>
                 <div>

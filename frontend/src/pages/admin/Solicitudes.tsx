@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Check, X, Loader2, AlertCircle, Mail, Fingerprint, GraduationCap, FileText, User } from 'lucide-react';
 
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3002/api/v1';
+const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3003/api/v1';
 
 interface Solicitud {
   id_usuario: string;
@@ -142,7 +142,9 @@ export const AdminSolicitudes = () => {
         </div>
       ) : (!Array.isArray(solicitudes) || solicitudes.length === 0) ? (
         <div className="text-center py-16 bg-[#374151] rounded-xl border border-gray-600">
-          <div className="text-gray-400 text-6xl mb-4">📭</div>
+          <div className="w-24 h-24 mx-auto mb-6 bg-linear-to-br from-blue-500/20 to-indigo-500/20 rounded-full flex items-center justify-center border border-blue-500/30">
+            <GraduationCap size={48} className="text-blue-400" />
+          </div>
           <h3 className="text-xl font-semibold text-white mb-2">No hay solicitudes pendientes</h3>
           <p className="text-gray-400">Todas las solicitudes han sido procesadas</p>
         </div>

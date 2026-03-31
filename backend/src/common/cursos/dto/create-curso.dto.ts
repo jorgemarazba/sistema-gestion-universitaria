@@ -1,5 +1,5 @@
 import { IsString, IsEnum, IsOptional, IsInt, Min, Max } from 'class-validator';
-import { NivelCurso } from '../entities/curso.entity';
+import { NivelCurso, ModalidadCurso } from '../entities/curso.entity';
 
 export class CreateCursoDto {
   @IsString()
@@ -34,4 +34,17 @@ export class CreateCursoDto {
   @IsOptional()
   @IsString()
   profesorId?: string;
+
+  @IsOptional()
+  @IsString()
+  programaId?: string;
+
+  @IsOptional()
+  @IsEnum(ModalidadCurso)
+  modalidad?: ModalidadCurso;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  cupos?: number;
 }

@@ -17,14 +17,24 @@ export class CursosController {
 
   @Get()
   @ApiOperation({ summary: 'Obtener todos los cursos' })
-  findAll(@Query('carrera') carrera?: string) {
-    return this.cursosService.findAll(carrera);
+  findAll(
+    @Query('carrera') carrera?: string,
+    @Query('programaId') programaId?: string,
+    @Query('modalidad') modalidad?: string,
+  ) {
+    return this.cursosService.findAll(carrera, programaId, modalidad as any);
   }
 
   @Get('carreras')
   @ApiOperation({ summary: 'Obtener lista de carreras disponibles' })
   getCarreras() {
     return this.cursosService.getCarreras();
+  }
+
+  @Get('modalidades')
+  @ApiOperation({ summary: 'Obtener lista de modalidades disponibles' })
+  getModalidades() {
+    return this.cursosService.getModalidades();
   }
 
   @Get(':id')

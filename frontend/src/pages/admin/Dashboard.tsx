@@ -6,18 +6,29 @@ import {
   GraduationCap, 
   Send, 
   FileText,
-  CheckCircle,
-  Clock,
-  X
+  X,
+  Users,
+  UserCircle,
+  BookOpen,
+  TrendingUp,
+  Activity,
+  AlertCircle,
+  Zap,
+  Crown,
+  Loader2,
+  CheckCircle2,
+  XCircle,
+  Info
 } from 'lucide-react';
 import { getAdminStats, getRoleDistribution, type AdminStats, type RoleDistribution } from '../../services/admin.service';
 
-const API_URL = 'http://localhost:3002/api/v1';
+const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3003/api/v1';
 
 interface UsuarioReciente {
   id: number;
   initials: string;
   nombre: string;
+  apellido: string;
   email: string;
   estado: string;
   rol: string;
@@ -33,6 +44,7 @@ interface Ticket {
   usuario: {
     nombre: string;
     apellido: string;
+    rol: string;
   };
 }
 
@@ -46,9 +58,17 @@ interface Pago {
   usuario: {
     nombre: string;
     apellido: string;
+    rol: string;
   };
 }
 
+interface ToastNotification {
+  id: string;
+  type: 'success' | 'error' | 'info' | 'warning';
+  title: string;
+  message: string;
+  duration?: number;
+}
 
 export const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -60,11 +80,87 @@ export const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
+  // Estado para notificaciones toast
+  const [toasts, setToasts] = useState<ToastNotification[]>([]);
+  
   // Estados para modales
   const [modalUsuario, setModalUsuario] = useState(false);
   const [modalCurso, setModalCurso] = useState(false);
   const [modalNotificacion, setModalNotificacion] = useState(false);
   const [modalReporte, setModalReporte] = useState(false);
+
+  // Estado para formulario de crear usuario
+  const [formUsuario, setFormUsuario] = useState({
+    nombre: '',
+    apellido: '',
+    documentoIdentidad: '',
+    correoPersonal: '',
+    telefono: '',
+    rol: 'estudiante' as 'estudiante' | 'profesor' | 'administrador',
+  });
+  const [creandoUsuario, setCreandoUsuario] = useState(false);
+
+  // Función para agregar notificaciones toast
+  const addToast = (type: 'success' | 'error' | 'info' | 'warning', title: string, message: string) => {
+    const id = Math.random().toString(36).substring(2, 9);
+    setToasts(prev => [...prev, { id, type, title, message }]);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id));
+    }, 5000);
+  };
+
+  // Función para remover notificación
+  const removeToast = (id: string) => {
+    setToasts(prev => prev.filter(t => t.id !== id));
+  };
+
+  // Función para crear usuario
+  const handleCrearUsuario = async () => {
+    try {
+      setCreandoUsuario(true);
+      await axios.post(`${API_URL}/usuarios`, {
+        nombre: formUsuario.nombre,
+        apellido: formUsuario.apellido,
+        documentoIdentidad: formUsuario.documentoIdentidad,
+        correoPersonal: formUsuario.correoPersonal,
+        telefono: formUsuario.telefono,
+        rol: formUsuario.rol,
+        estado: 'activo',
+      });
+      
+      // Limpiar formulario y cerrar modal
+      setFormUsuario({
+        nombre: '',
+        apellido: '',
+        documentoIdentidad: '',
+        correoPersonal: '',
+        telefono: '',
+        rol: 'estudiante',
+      });
+      setModalUsuario(false);
+      
+      // Recargar datos del dashboard
+      const [statsData, rolesData, usuariosData] = await Promise.all([
+        getAdminStats(),
+        getRoleDistribution(),
+        axios.get(`${API_URL}/usuarios/recientes?limite=5`).then(r => Array.isArray(r.data) ? r.data : (r.data.data || [])),
+      ]);
+      setStats(statsData);
+      setRoleDistribution(rolesData);
+      setUsuariosRecientes(usuariosData);
+      
+      // Notificación de éxito estilo universitario
+      addToast('success', '¡Registro Exitoso! 🎓', `${formUsuario.nombre} ${formUsuario.apellido} ha sido registrado correctamente en nuestra comunidad académica.`);
+    } catch (err: any) {
+      console.error('Error al crear usuario:', err);
+      // Notificación de error amigable
+      addToast('error', 'Error en el Registro', err.response?.data?.message || 'Hubo un problema al registrar el usuario. Por favor, intenta nuevamente.');
+    } finally {
+      setCreandoUsuario(false);
+    }
+  };
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -173,72 +269,209 @@ export const AdminDashboard = () => {
         <p className="text-sm text-white font-medium">Última actualización: Ahora</p>
       </div>
 
-      {/* Distribución de Roles */}
+      {/* Estadísticas Universitarias Elegantes */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-[#374151] p-6 rounded-xl shadow-lg border border-gray-600">
-          <h2 className="text-lg font-bold mb-4 text-white">Distribución de Usuarios</h2>
-          <div className="space-y-4">
-            {roleDistribution.length > 0 ? (
-              roleDistribution.map((role, index) => {
-                const percentage = getPercentage(role.count);
-                const colors = ['bg-blue-600', 'bg-sky-500', 'bg-amber-500'];
-                const labelColor = index === 0 ? 'Estudiantes' : index === 1 ? 'Profesores' : 'Administradores';
+        {/* Gráfico Circular de Distribución */}
+        <div className="lg:col-span-2 bg-linear-to-br from-slate-800/90 to-slate-900/90 backdrop-blur-xl p-8 rounded-2xl shadow-2xl border border-slate-700/50">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-amber-400" />
+                Distribución Institucional
+              </h2>
+              <p className="text-slate-400 text-sm mt-1">Composición de la comunidad universitaria</p>
+            </div>
+          </div>
 
-                return (
-                  <div key={role.role}>
-                    <div className="flex justify-between mb-1">
-                      <p className="text-sm text-gray-300 font-medium">{labelColor || role.role} ({percentage}%)</p>
-                      <span className="text-sm font-bold text-white">{role.count}</span>
+          <div className="flex flex-col md:flex-row items-center gap-8">
+            {/* Gráfico Donut SVG */}
+            <div className="relative w-48 h-48 shrink-0">
+              <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
+                {/* Círculo base */}
+                <circle cx="50" cy="50" r="40" fill="none" stroke="#334155" strokeWidth="12" />
+                {/* Segmentos de datos */}
+                {roleDistribution.length > 0 && (() => {
+                  let accumulatedPercentage = 0;
+                  const colors = ['#3b82f6', '#06b6d4', '#f59e0b']; // Azul, Cyan, Ámbar
+                  
+                  return roleDistribution.map((role, index) => {
+                    const percentage = getPercentage(role.count);
+                    const circumference = 2 * Math.PI * 40;
+                    const strokeDasharray = `${(percentage / 100) * circumference} ${circumference}`;
+                    const strokeDashoffset = -((accumulatedPercentage / 100) * circumference);
+                    accumulatedPercentage += percentage;
+                    
+                    return (
+                      <circle
+                        key={role.role}
+                        cx="50"
+                        cy="50"
+                        r="40"
+                        fill="none"
+                        stroke={colors[index % colors.length]}
+                        strokeWidth="12"
+                        strokeDasharray={strokeDasharray}
+                        strokeDashoffset={strokeDashoffset}
+                        strokeLinecap="round"
+                        className="transition-all duration-700 ease-out"
+                      />
+                    );
+                  });
+                })()}
+              </svg>
+              {/* Centro del donut */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-white">{totalByRole}</div>
+                  <div className="text-xs text-slate-400 uppercase tracking-wider">Total</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Leyenda de Roles */}
+            <div className="flex-1 space-y-4 w-full">
+              {roleDistribution.length > 0 ? (
+                roleDistribution.map((role, index) => {
+                  const percentage = getPercentage(role.count);
+                  const colors = [
+                    { bg: 'bg-blue-500', border: 'border-blue-500', text: 'text-blue-400', icon: Users },
+                    { bg: 'bg-cyan-500', border: 'border-cyan-500', text: 'text-cyan-400', icon: BookOpen },
+                    { bg: 'bg-purple-500', border: 'border-purple-500', text: 'text-purple-400', icon: Crown }
+                  ];
+                  const color = colors[index % colors.length];
+                  const Icon = color.icon;
+                  const label = role.role === 'estudiante' ? 'Estudiantes' : role.role === 'profesor' ? 'Profesores' : 'Administradores';
+
+                  return (
+                    <div key={role.role} className="group">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-10 h-10 rounded-xl ${color.bg}/20 flex items-center justify-center border ${color.border}/30`}>
+                            <Icon className={`w-5 h-5 ${color.text}`} />
+                          </div>
+                          <div>
+                            <p className="text-white font-semibold">{label}</p>
+                            <p className="text-slate-400 text-sm">{role.count} usuarios</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className={`text-2xl font-bold ${color.text}`}>{percentage}%</p>
+                        </div>
+                      </div>
+                      {/* Barra de progreso mini */}
+                      <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden">
+                        <div 
+                          className={`h-full ${color.bg} rounded-full transition-all duration-700`}
+                          style={{ width: `${percentage}%` }}
+                        />
+                      </div>
                     </div>
-                    <div className="w-full bg-slate-100 rounded-full h-2">
-                      <div
-                        className={`h-2 rounded-full ${colors[index % colors.length]}`}
-                        style={{ width: `${percentage}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                );
-              })
-            ) : (
-              <p className="text-gray-400 text-sm font-medium">No hay datos de distribución</p>
-            )}
+                  );
+                })
+              ) : (
+                <p className="text-slate-400 text-center py-8">No hay datos de distribución</p>
+              )}
+            </div>
           </div>
         </div>
 
         {/* Actividad Crítica */}
-        <div className="bg-[#374151] p-6 rounded-xl shadow-lg border border-gray-600">
-          <h2 className="text-lg font-bold mb-4 text-white">Actividad Crítica</h2>
-          <div className="flow-root">
-            <ul className="-mb-8">
-              <li className="relative pb-8">
-                <div className="relative flex space-x-3">
-                  <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center text-green-600">
-                    <CheckCircle size={16} />
-                  </div>
-                  <div className="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
-                    <p className="text-sm text-gray-300 font-medium">Usuarios activos: <span className="font-bold text-white">{stats?.activeUsers ?? 0}</span></p>
-                    <span className="text-xs text-gray-400 font-medium">En vivo</span>
-                  </div>
-                </div>
-              </li>
-              <li className="relative pb-8">
-                <div className="relative flex space-x-3">
-                  <div className="h-8 w-8 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600">
-                    <Clock size={16} />
-                  </div>
-                  <div className="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
-                    <p className="text-sm text-gray-300 font-medium">Solicitudes en espera: <span className="font-bold text-white">{stats?.pendingRequests ?? 0}</span></p>
-                    <span className="text-xs text-gray-400 font-medium">Pendiente</span>
-                  </div>
-                </div>
-              </li>
-            </ul>
+        <div className="bg-linear-to-br from-slate-800/90 to-slate-900/90 backdrop-blur-xl p-8 rounded-2xl shadow-2xl border border-slate-700/50">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                <Activity className="w-5 h-5 text-rose-400" />
+                Actividad Crítica
+              </h2>
+              <p className="text-slate-400 text-sm mt-1">Métricas en tiempo real</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+              <span className="text-xs text-emerald-400 font-medium">En vivo</span>
+            </div>
           </div>
+          
+          {/* Tarjetas de métricas */}
+          <div className="space-y-4">
+            {/* Usuarios Activos */}
+            <div className="group bg-slate-700/30 hover:bg-slate-700/50 border border-slate-600/30 rounded-xl p-4 transition-all duration-300">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center border border-emerald-500/30">
+                    <Zap className="w-6 h-6 text-emerald-400" />
+                  </div>
+                  <div>
+                    <p className="text-slate-400 text-sm font-medium">Usuarios Activos</p>
+                    <p className="text-2xl font-bold text-white">{stats?.activeUsers ?? 0}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <span className="text-xs text-emerald-400 font-medium bg-emerald-500/10 px-2 py-1 rounded-full">
+                    Operativo
+                  </span>
+                </div>
+              </div>
+              <div className="mt-3 h-1 bg-slate-600 rounded-full overflow-hidden">
+                <div className="h-full bg-emerald-500 rounded-full transition-all duration-700" style={{ width: `${Math.min((stats?.activeUsers ?? 0) * 10, 100)}%` }}></div>
+              </div>
+            </div>
+
+            {/* Solicitudes Pendientes */}
+            <div className="group bg-slate-700/30 hover:bg-slate-700/50 border border-slate-600/30 rounded-xl p-4 transition-all duration-300">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center border border-amber-500/30">
+                    <AlertCircle className="w-6 h-6 text-amber-400" />
+                  </div>
+                  <div>
+                    <p className="text-slate-400 text-sm font-medium">Solicitudes Pendientes</p>
+                    <p className="text-2xl font-bold text-white">{stats?.pendingRequests ?? 0}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <span className={`text-xs font-medium px-2 py-1 rounded-full ${(stats?.pendingRequests ?? 0) > 5 ? 'bg-rose-500/10 text-rose-400' : 'bg-amber-500/10 text-amber-400'}`}>
+                    {(stats?.pendingRequests ?? 0) > 5 ? 'Urgente' : 'Pendiente'}
+                  </span>
+                </div>
+              </div>
+              <div className="mt-3 h-1 bg-slate-600 rounded-full overflow-hidden">
+                <div className={`h-full rounded-full transition-all duration-700 ${(stats?.pendingRequests ?? 0) > 5 ? 'bg-rose-500' : 'bg-amber-500'}`} style={{ width: `${Math.min((stats?.pendingRequests ?? 0) * 20, 100)}%` }}></div>
+              </div>
+            </div>
+
+            {/* Total de Usuarios */}
+            <div className="group bg-slate-700/30 hover:bg-slate-700/50 border border-slate-600/30 rounded-xl p-4 transition-all duration-300">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center border border-blue-500/30">
+                    <UserCircle className="w-6 h-6 text-blue-400" />
+                  </div>
+                  <div>
+                    <p className="text-slate-400 text-sm font-medium">Total de Usuarios</p>
+                    <p className="text-2xl font-bold text-white">{stats?.totalUsers ?? 0}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <span className="text-xs text-blue-400 font-medium bg-blue-500/10 px-2 py-1 rounded-full">
+                    Registrados
+                  </span>
+                </div>
+              </div>
+              <div className="mt-3 h-1 bg-slate-600 rounded-full overflow-hidden">
+                <div className="h-full bg-blue-500 rounded-full transition-all duration-700" style={{ width: '100%' }}></div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Botón de acción */}
           <button
             onClick={() => navigate('/admin/solicitudes')}
-            className="w-full mt-6 bg-indigo-600 text-white py-2 rounded-lg font-bold hover:bg-indigo-700 transition"
+            className="w-full mt-6 bg-linear-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg shadow-indigo-900/30 flex items-center justify-center gap-2 group"
           >
-            Gestionar Solicitudes
+            <span>Gestionar Solicitudes</span>
+            <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
           </button>
         </div>
       </div>
@@ -258,11 +491,16 @@ export const AdminDashboard = () => {
               usuariosRecientes.map((usuario, index) => (
                 <div key={`${usuario.id}-${index}`} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                      {usuario.initials}
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm ${
+                      usuario.rol === 'estudiante' ? 'bg-blue-500' :
+                      usuario.rol === 'profesor' ? 'bg-cyan-500' :
+                      usuario.rol === 'administrador' ? 'bg-purple-500' :
+                      'bg-emerald-500'
+                    }`}>
+                      {usuario.initials || usuario.nombre?.charAt(0)?.toUpperCase()}{usuario.apellido?.charAt(0)?.toUpperCase()}
                     </div>
                     <div>
-                      <p className="font-semibold text-white text-sm">{usuario.nombre}</p>
+                      <p className="font-semibold text-white text-sm">{usuario.nombre} {usuario.apellido}</p>
                       <p className="text-gray-400 text-xs">{usuario.email}</p>
                     </div>
                   </div>
@@ -288,7 +526,12 @@ export const AdminDashboard = () => {
               tickets.map((ticket) => (
                 <div key={ticket.id} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                    <div className={`w-14 h-14 rounded-full flex items-center justify-center text-white text-xl font-bold ${
+                      ticket.usuario?.rol === 'estudiante' ? 'bg-blue-600' :
+                      ticket.usuario?.rol === 'profesor' ? 'bg-cyan-500' :
+                      ticket.usuario?.rol === 'administrador' ? 'bg-purple-500' :
+                      'bg-blue-600'
+                    }`}>
                       {ticket.usuario?.nombre?.charAt(0)}{ticket.usuario?.apellido?.charAt(0)}
                     </div>
                     <div>
@@ -408,28 +651,61 @@ export const AdminDashboard = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-400 mb-1">Nombre</label>
-                  <input type="text" className="w-full px-3 py-2 bg-[#1f2937] border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition" />
+                  <input 
+                    type="text" 
+                    value={formUsuario.nombre}
+                    onChange={(e) => setFormUsuario({...formUsuario, nombre: e.target.value})}
+                    className="w-full px-3 py-2 bg-[#1f2937] border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition" 
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-400 mb-1">Apellido</label>
-                  <input type="text" className="w-full px-3 py-2 bg-[#1f2937] border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition" />
+                  <input 
+                    type="text" 
+                    value={formUsuario.apellido}
+                    onChange={(e) => setFormUsuario({...formUsuario, apellido: e.target.value})}
+                    className="w-full px-3 py-2 bg-[#1f2937] border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition" 
+                  />
                 </div>
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-400 mb-1">Documento de Identidad</label>
-                <input type="text" className="w-full px-3 py-2 bg-[#1f2937] border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition" />
+                <input 
+                  type="text" 
+                  value={formUsuario.documentoIdentidad}
+                  onChange={(e) => setFormUsuario({...formUsuario, documentoIdentidad: e.target.value})}
+                  className="w-full px-3 py-2 bg-[#1f2937] border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition" 
+                />
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-400 mb-1">Correo Personal</label>
-                <input type="email" className="w-full px-3 py-2 bg-[#1f2937] border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition" />
+                <input 
+                  type="email" 
+                  value={formUsuario.correoPersonal}
+                  onChange={(e) => setFormUsuario({...formUsuario, correoPersonal: e.target.value})}
+                  className="w-full px-3 py-2 bg-[#1f2937] border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition" 
+                />
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-400 mb-1">Teléfono</label>
-                <input type="text" className="w-full px-3 py-2 bg-[#1f2937] border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition" />
+                <input 
+                  type="tel" 
+                  value={formUsuario.telefono}
+                  onChange={(e) => setFormUsuario({...formUsuario, telefono: e.target.value})}
+                  className="w-full px-3 py-2 bg-[#1f2937] border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition" 
+                />
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-400 mb-1">Rol</label>
-                <select className="w-full px-3 py-2 bg-[#1f2937] border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition">
+                <select 
+                  value={formUsuario.rol}
+                  onChange={(e) => setFormUsuario({...formUsuario, rol: e.target.value as 'estudiante' | 'profesor' | 'administrador'})}
+                  className="w-full px-3 py-2 bg-[#1f2937] border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                >
                   <option value="estudiante">Estudiante</option>
                   <option value="profesor">Profesor</option>
                   <option value="administrador">Administrador</option>
@@ -442,11 +718,26 @@ export const AdminDashboard = () => {
               </div>
               {/* Botones */}
               <div className="flex gap-3 pt-4">
-                <button onClick={() => setModalUsuario(false)} className="flex-1 px-4 py-2 border border-gray-500 text-gray-300 rounded-lg hover:bg-gray-700 transition font-medium">
+                <button 
+                  onClick={() => setModalUsuario(false)} 
+                  disabled={creandoUsuario}
+                  className="flex-1 px-4 py-2 border border-gray-500 text-gray-300 rounded-lg hover:bg-gray-700 transition font-medium disabled:opacity-50"
+                >
                   Cancelar
                 </button>
-                <button className="flex-1 px-4 py-2 bg-linear-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition font-medium shadow-lg shadow-blue-900/30">
-                  Crear Usuario
+                <button 
+                  onClick={handleCrearUsuario}
+                  disabled={creandoUsuario}
+                  className="flex-1 px-4 py-2 bg-linear-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition font-medium shadow-lg shadow-blue-900/30 disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {creandoUsuario ? (
+                    <>
+                      <Loader2 size={18} className="animate-spin" />
+                      Creando...
+                    </>
+                  ) : (
+                    'Crear Usuario'
+                  )}
                 </button>
               </div>
             </div>
@@ -681,6 +972,42 @@ export const AdminDashboard = () => {
           </div>
         </div>
       )}
+
+      {/* Toast Notifications Container */}
+      <div className="fixed top-4 right-4 z-50 flex flex-col gap-3 w-full max-w-sm">
+        {toasts.map((toast) => (
+          <div
+            key={toast.id}
+            className={`transform transition-all duration-300 ease-out animate-in slide-in-from-right-full ${
+              toast.type === 'success' ? 'bg-linear-to-r from-emerald-500 to-teal-600' :
+              toast.type === 'error' ? 'bg-linear-to-r from-rose-500 to-pink-600' :
+              toast.type === 'warning' ? 'bg-linear-to-r from-amber-500 to-orange-600' :
+              'bg-linear-to-r from-blue-500 to-indigo-600'
+            } text-white rounded-xl shadow-2xl p-4 flex items-start gap-3 backdrop-blur-sm border border-white/20`}
+          >
+            <div className="shrink-0 mt-0.5">
+              {toast.type === 'success' && <CheckCircle2 size={20} className="text-white" />}
+              {toast.type === 'error' && <XCircle size={20} className="text-white" />}
+              {toast.type === 'warning' && <AlertCircle size={20} className="text-white" />}
+              {toast.type === 'info' && <Info size={20} className="text-white" />}
+            </div>
+            <div className="flex-1 min-w-0">
+              <h4 className="font-semibold text-sm leading-tight mb-1">
+                {toast.title}
+              </h4>
+              <p className="text-xs text-white/90 leading-relaxed">
+                {toast.message}
+              </p>
+            </div>
+            <button
+              onClick={() => removeToast(toast.id)}
+              className="shrink-0 text-white/70 hover:text-white transition-colors p-1 hover:bg-white/20 rounded-lg"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

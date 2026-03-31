@@ -9,7 +9,7 @@ import { NotificacionesModule } from './common/notificaciones/notificaciones.mod
 import { TicketsModule } from './common/tickets/tickets.module';
 import { PagosModule } from './common/pagos/pagos.module';
 import { CursosModule } from './common/cursos/cursos.module';
-import { ReportesModule } from './common/reportes/reportes.module';
+import { ProgramasModule } from './common/programas/programas.module';
 
 @Module({
   imports: [
@@ -40,7 +40,7 @@ import { ReportesModule } from './common/reportes/reportes.module';
     TicketsModule,
     PagosModule,
     CursosModule,
-    ReportesModule,
+    ProgramasModule,
   ],
   controllers: [AppController],
   providers: [AppService],
