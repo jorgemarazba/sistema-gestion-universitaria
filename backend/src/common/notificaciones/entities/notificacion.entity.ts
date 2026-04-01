@@ -6,7 +6,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-export type TipoNotificacion = 'pago' | 'ticket' | 'solicitud' | 'sistema';
+export type TipoNotificacion = 'pago' | 'ticket' | 'solicitud' | 'sistema' | 'info' | 'warning' | 'success' | 'urgent';
 export type EstadoNotificacion = 'pendiente' | 'leida' | 'archivada';
 
 @Entity('notificaciones')
@@ -22,7 +22,7 @@ export class Notificacion {
 
   @Column({
     type: 'enum',
-    enum: ['pago', 'ticket', 'solicitud', 'sistema'],
+    enum: ['pago', 'ticket', 'solicitud', 'sistema', 'info', 'warning', 'success', 'urgent'],
     default: 'sistema',
   })
   tipo: TipoNotificacion;

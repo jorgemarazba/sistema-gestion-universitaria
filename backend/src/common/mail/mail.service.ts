@@ -348,6 +348,141 @@ export class MailService {
   }
 
   /**
+   * Enviar notificación general
+   */
+  async enviarNotificacion(
+    correo: string,
+    titulo: string,
+    mensaje: string,
+  ) {
+    const asunto = `📢 ${titulo}`;
+
+    const contenidoHtml = this.generarTemplateNotificacion(titulo, mensaje);
+
+    console.log(`📤 [MailService] Preparando envío:`);
+    console.log(`   - Destinatario (to): ${correo}`);
+    console.log(`   - From: ${process.env.GMAIL_USER}`);
+
+    try {
+      const info = await this.transporter.sendMail({
+        from: `"Sistema de Gestión Universitaria" <${process.env.GMAIL_USER}>`,
+        to: correo,
+        subject: asunto,
+        html: contenidoHtml,
+      });
+
+      console.log('✅ Email de notificación enviado:', info.messageId);
+      console.log(`   - Enviado a: ${info.envelope?.to?.join(', ') || correo}`);
+      return { success: true, messageId: info.messageId };
+    } catch (error) {
+      console.error('❌ Error al enviar email de notificación:', error);
+      throw new Error(`Error enviando email: ${error.message}`);
+    }
+  }
+
+  /**
+   * Template HTML para notificaciones generales
+   */
+  private generarTemplateNotificacion(titulo: string, mensaje: string): string {
+    return `
+      <!DOCTYPE html>
+      <html lang="es">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+          @import url('https://fonts.googleapis.com/css2?family=Crimson+Text:wght@400;600;700&family=Source+Sans+Pro:wght@400;600&display=swap');
+          
+          body { 
+            font-family: 'Source Sans Pro', Arial, sans-serif; 
+            background-color: #f8f9fa; 
+            margin: 0; 
+            padding: 0; 
+            line-height: 1.6;
+          }
+          .container { 
+            max-width: 600px; 
+            margin: 20px auto; 
+            background: white; 
+            border: 1px solid #e9ecef;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
+          }
+          .header { 
+            background: #1e3a5f; 
+            color: white; 
+            padding: 30px; 
+            text-align: center;
+            border-bottom: 4px solid #c9a227;
+          }
+          .header h1 {
+            font-family: 'Crimson Text', Georgia, serif;
+            font-size: 24px;
+            margin: 0;
+            font-weight: 700;
+          }
+          .content { 
+            padding: 40px 30px; 
+            color: #343a40;
+          }
+          .notification-box { 
+            background: #f8f9fa; 
+            border-left: 4px solid #c9a227;
+            padding: 20px; 
+            margin: 20px 0; 
+          }
+          .titulo {
+            font-family: 'Crimson Text', Georgia, serif;
+            font-size: 20px;
+            color: #1e3a5f;
+            margin-bottom: 15px;
+            font-weight: 600;
+          }
+          .mensaje {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #495057;
+          }
+          .footer { 
+            background: #f8f9fa; 
+            border-top: 1px solid #e9ecef;
+            padding: 30px; 
+            text-align: center; 
+            font-size: 13px; 
+            color: #6c757d; 
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>Notificación Institucional</h1>
+          </div>
+          
+          <div class="content">
+            <div class="notification-box">
+              <div class="titulo">${titulo}</div>
+              <div class="mensaje">${mensaje}</div>
+            </div>
+            
+            <p style="color: #6c757d; font-size: 14px; margin-top: 30px;">
+              Para más información, ingrese al Sistema de Gestión Universitaria.
+            </p>
+          </div>
+          
+          <div class="footer">
+            <div style="font-family: 'Crimson Text', Georgia, serif; font-size: 16px; color: #1e3a5f; margin-bottom: 10px; font-weight: 600;">
+              Sistema de Gestión Universitaria
+            </div>
+            <p>© 2026 Todos los derechos reservados.</p>
+            <p>Este correo es generado automáticamente. Por favor no responda a esta dirección.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+  }
+
+  /**
    * Template HTML para rechazo
    */
   private generarTemplateRechazo(nombre: string, motivo: string): string {

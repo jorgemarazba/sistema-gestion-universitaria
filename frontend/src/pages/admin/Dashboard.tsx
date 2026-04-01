@@ -30,6 +30,8 @@ import { CursosService } from '../../services/cursos.service';
 import { UsuariosService } from '../../services/usuarios.service';
 import type { Usuario } from '../../services/usuarios.service';
 import { ProgramasService } from '../../services/programas.service';
+import { NotificacionesService, type TipoNotificacion } from '../../services/notificaciones.service';
+import { useNotificacionesStore } from '../../store/notificacionesStore';
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3003/api/v1';
 
@@ -209,6 +211,52 @@ export const AdminDashboard = () => {
     rol: 'estudiante' as 'estudiante' | 'profesor' | 'administrador',
   });
   const [creandoUsuario, setCreandoUsuario] = useState(false);
+
+  // Estado para formulario de notificación
+  const [formNotificacion, setFormNotificacion] = useState({
+    destinatarios: '',
+    tipo: 'info' as TipoNotificacion,
+    asunto: '',
+    mensaje: '',
+    enviarEmail: false,
+  });
+  const [enviandoNotificacion, setEnviandoNotificacion] = useState(false);
+
+  // Función para enviar notificación
+  const handleEnviarNotificacion = async () => {
+    try {
+      setEnviandoNotificacion(true);
+      
+      await NotificacionesService.crearNotificacion({
+        titulo: formNotificacion.asunto,
+        descripcion: formNotificacion.mensaje,
+        tipo: formNotificacion.tipo,
+        destinatarios: formNotificacion.destinatarios,
+        enviarEmail: formNotificacion.enviarEmail,
+        paraAdmin: formNotificacion.destinatarios === 'admin',
+      });
+      
+      // Recargar notificaciones en el store para actualizar el icono
+      await useNotificacionesStore.getState().cargarNotificaciones();
+      
+      addToast('success', 'Notificación Enviada', 'La notificación se ha enviado exitosamente.');
+      
+      // Limpiar formulario y cerrar modal
+      setFormNotificacion({
+        destinatarios: '',
+        tipo: 'info',
+        asunto: '',
+        mensaje: '',
+        enviarEmail: false,
+      });
+      setModalNotificacion(false);
+    } catch (err: any) {
+      console.error('Error al enviar notificación:', err);
+      addToast('error', 'Error', err.response?.data?.message || 'Hubo un problema al enviar la notificación.');
+    } finally {
+      setEnviandoNotificacion(false);
+    }
+  };
 
   // Función para agregar notificaciones toast
   const addToast = (type: 'success' | 'error' | 'info' | 'warning', title: string, message: string) => {
@@ -1181,7 +1229,13 @@ export const AdminDashboard = () => {
             <div className="p-6 space-y-4">
               <div>
                 <label htmlFor="destinatarios" className="block text-sm font-semibold text-gray-200 mb-1">Destinatarios</label>
-                <select id="destinatarios" name="destinatarios" className="w-full px-3 py-2 bg-[#1f2937] border border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition text-white">
+                <select 
+                  id="destinatarios" 
+                  name="destinatarios" 
+                  value={formNotificacion.destinatarios}
+                  onChange={(e) => setFormNotificacion({...formNotificacion, destinatarios: e.target.value})}
+                  className="w-full px-3 py-2 bg-[#1f2937] border border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition text-white"
+                >
                   <option key="empty" value="">Seleccionar grupo...</option>
                   <option key="todos" value="todos">Todos los usuarios</option>
                   <option key="estudiantes" value="estudiantes">Todos los estudiantes</option>
@@ -1195,7 +1249,15 @@ export const AdminDashboard = () => {
                 <label className="block text-sm font-semibold text-gray-200 mb-1">Tipo de Notificación</label>
                 <div className="flex gap-2">
                   {['info', 'warning', 'success', 'urgent'].map((tipo) => (
-                    <button key={tipo} className="px-3 py-1.5 text-xs font-medium rounded-full border border-gray-500 hover:bg-purple-500/20 hover:border-purple-400 transition capitalize text-gray-200">
+                    <button 
+                      key={tipo} 
+                      onClick={() => setFormNotificacion({...formNotificacion, tipo: tipo as TipoNotificacion})}
+                      className={`px-3 py-1.5 text-xs font-medium rounded-full border transition capitalize ${
+                        formNotificacion.tipo === tipo 
+                          ? 'bg-purple-500/20 border-purple-400 text-purple-300' 
+                          : 'border-gray-500 text-gray-200 hover:bg-purple-500/20 hover:border-purple-400'
+                      }`}
+                    >
                       {tipo === 'info' ? 'Informativa' : tipo === 'warning' ? 'Advertencia' : tipo === 'success' ? 'Éxito' : 'Urgente'}
                     </button>
                   ))}
@@ -1203,14 +1265,36 @@ export const AdminDashboard = () => {
               </div>
               <div>
                 <label htmlFor="asunto" className="block text-sm font-semibold text-gray-200 mb-1">Asunto</label>
-                <input type="text" id="asunto" name="asunto" placeholder="Ej: Recordatorio de matrícula" className="w-full px-3 py-2 bg-[#1f2937] border border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition text-white placeholder-gray-400" />
+                <input 
+                  type="text" 
+                  id="asunto" 
+                  name="asunto" 
+                  placeholder="Ej: Recordatorio de matrícula" 
+                  value={formNotificacion.asunto}
+                  onChange={(e) => setFormNotificacion({...formNotificacion, asunto: e.target.value})}
+                  className="w-full px-3 py-2 bg-[#1f2937] border border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition text-white placeholder-gray-400" 
+                />
               </div>
               <div>
                 <label htmlFor="mensaje" className="block text-sm font-semibold text-gray-200 mb-1">Mensaje</label>
-                <textarea id="mensaje" name="mensaje" rows={4} placeholder="Escribe el mensaje de la notificación..." className="w-full px-3 py-2 bg-[#1f2937] border border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition resize-none text-white placeholder-gray-400" />
+                <textarea 
+                  id="mensaje" 
+                  name="mensaje" 
+                  rows={4} 
+                  placeholder="Escribe el mensaje de la notificación..." 
+                  value={formNotificacion.mensaje}
+                  onChange={(e) => setFormNotificacion({...formNotificacion, mensaje: e.target.value})}
+                  className="w-full px-3 py-2 bg-[#1f2937] border border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition resize-none text-white placeholder-gray-400" 
+                />
               </div>
               <div className="flex items-center gap-2">
-                <input type="checkbox" id="email" className="w-4 h-4 text-purple-600 rounded border-gray-500 focus:ring-purple-500 bg-[#1f2937]" />
+                <input 
+                  type="checkbox" 
+                  id="email" 
+                  checked={formNotificacion.enviarEmail}
+                  onChange={(e) => setFormNotificacion({...formNotificacion, enviarEmail: e.target.checked})}
+                  className="w-4 h-4 text-purple-600 rounded border-gray-500 focus:ring-purple-500 bg-[#1f2937]" 
+                />
                 <label htmlFor="email" className="text-sm text-gray-300">Enviar también por correo electrónico</label>
               </div>
               {/* Botones */}
@@ -1218,8 +1302,19 @@ export const AdminDashboard = () => {
                 <button onClick={() => setModalNotificacion(false)} className="flex-1 px-4 py-2 border border-gray-500 text-gray-300 rounded-lg hover:bg-gray-700 transition font-medium">
                   Cancelar
                 </button>
-                <button className="flex-1 px-4 py-2 bg-linear-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:from-purple-700 hover:to-purple-800 transition font-medium">
-                  Enviar Notificación
+                <button 
+                  onClick={handleEnviarNotificacion}
+                  disabled={enviandoNotificacion}
+                  className="flex-1 px-4 py-2 bg-linear-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:from-purple-700 hover:to-purple-800 transition font-medium disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {enviandoNotificacion ? (
+                    <>
+                      <Loader2 size={18} className="animate-spin" />
+                      Enviando...
+                    </>
+                  ) : (
+                    'Enviar Notificación'
+                  )}
                 </button>
               </div>
             </div>

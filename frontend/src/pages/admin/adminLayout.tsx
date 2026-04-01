@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { useNotificacionesStore } from '../../store/notificacionesStore';
+import { useAuthStore } from '../../store/authStore';
 import { 
   LayoutDashboard, 
   UserPlus, 
@@ -13,19 +14,6 @@ import {
   BarChart3,
   Bell,
 } from 'lucide-react';
-import { useAuthStore } from '../../store/authStore';
-
-const API_URL = 'http://localhost:3003/api/v1';
-
-interface Notificacion {
-  id: string;
-  titulo: string;
-  descripcion: string;
-  tipo: 'pago' | 'ticket' | 'solicitud' | 'sistema';
-  estado: 'pendiente' | 'leida' | 'archivada';
-  creadoEn: string;
-  paraAdmin: boolean;
-}
 
 const AdminLayout: React.FC = () => {
   const location = useLocation();
@@ -33,8 +21,7 @@ const AdminLayout: React.FC = () => {
   const logout = useAuthStore((state) => state.logout);
   const user = useAuthStore((state) => state.user);
   const [notifOpen, setNotifOpen] = useState(false);
-  const [notificaciones, setNotificaciones] = useState<Notificacion[]>([]);
-  const [contadorNotif, setContadorNotif] = useState(0);
+  const { notificaciones, contadorPendientes, cargarNotificaciones, marcarComoLeida, marcarTodasComoLeidas } = useNotificacionesStore();
 
   // Determinar colores según el rol
   const getRoleColors = () => {
@@ -73,51 +60,13 @@ const AdminLayout: React.FC = () => {
 
   const colors = getRoleColors();
 
-  // Cargar notificaciones
-  const cargarNotificaciones = async () => {
-    try {
-      const response = await axios.get(`${API_URL}/notificaciones?admin=true`);
-      const data = response.data;
-      
-      // Asegurar que sea un array
-      const notificacionesArray = Array.isArray(data) ? data : (data.data || []);
-      setNotificaciones(notificacionesArray);
-      
-      // Contar pendientes
-      const pendientes = notificacionesArray.filter((n: Notificacion) => n.estado === 'pendiente').length;
-      setContadorNotif(pendientes);
-    } catch (err) {
-      console.error('Error al cargar notificaciones:', err);
-    }
-  };
-
-  // Cargar al montar
+  // Cargar notificaciones al montar
   useEffect(() => {
     cargarNotificaciones();
     // Actualizar cada 30 segundos
     const interval = setInterval(cargarNotificaciones, 30000);
     return () => clearInterval(interval);
-  }, []);
-
-  // Marcar como leída
-  const marcarComoLeida = async (id: string) => {
-    try {
-      await axios.post(`${API_URL}/notificaciones/${id}/leer`);
-      cargarNotificaciones();
-    } catch (err) {
-      console.error('Error al marcar notificación:', err);
-    }
-  };
-
-  // Marcar todas como leídas
-  const marcarTodasLeidas = async () => {
-    try {
-      await axios.post(`${API_URL}/notificaciones/marcar-todas-leidas`);
-      cargarNotificaciones();
-    } catch (err) {
-      console.error('Error al marcar todas:', err);
-    }
-  };
+  }, [cargarNotificaciones]);
 
   // Formatear tiempo relativo
   const tiempoRelativo = (fecha: string) => {
@@ -226,9 +175,9 @@ const AdminLayout: React.FC = () => {
                 className={`relative p-2 text-white ${colors.hover} rounded-full transition`}
               >
                 <Bell size={20} />
-                {contadorNotif > 0 && (
+                {contadorPendientes > 0 && (
                   <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 rounded-full text-xs font-bold flex items-center justify-center">
-                    {contadorNotif > 9 ? '9+' : contadorNotif}
+                    {contadorPendientes > 9 ? '9+' : contadorPendientes}
                   </span>
                 )}
               </button>
@@ -239,9 +188,9 @@ const AdminLayout: React.FC = () => {
                   {/* Header */}
                   <div className="flex justify-between items-center p-4 border-b border-gray-700">
                     <h3 className="text-lg font-bold text-white">Notificaciones</h3>
-                    {contadorNotif > 0 && (
+                    {contadorPendientes > 0 && (
                       <button 
-                        onClick={marcarTodasLeidas}
+                        onClick={marcarTodasComoLeidas}
                         className="text-gray-400 hover:text-white text-sm"
                       >
                         Marcar todas como leídas
