@@ -107,10 +107,13 @@ export const SolicitudCuentaPage = () => {
             >
               <div className="grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-4">
                 <div>
-                  <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-400">
+                  <label htmlFor="nombre" className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-400">
                     Nombre
                   </label>
                   <input
+                    id="nombre"
+                    name="nombre"
+                    autoComplete="given-name"
                     {...register('nombre')}
                     className={inputClass}
                     placeholder="Tu nombre"
@@ -122,10 +125,13 @@ export const SolicitudCuentaPage = () => {
                   )}
                 </div>
                 <div>
-                  <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-400">
+                  <label htmlFor="apellido" className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-400">
                     Apellido
                   </label>
                   <input
+                    id="apellido"
+                    name="apellido"
+                    autoComplete="family-name"
                     {...register('apellido')}
                     className={inputClass}
                     placeholder="Tu apellido"
@@ -139,7 +145,7 @@ export const SolicitudCuentaPage = () => {
               </div>
 
               <div>
-                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-400">
+                <label htmlFor="documento_identidad" className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-400">
                   Documento de identidad
                 </label>
                 <div className="relative">
@@ -148,6 +154,8 @@ export const SolicitudCuentaPage = () => {
                     aria-hidden
                   />
                   <input
+                    id="documento_identidad"
+                    name="documento_identidad"
                     {...register('documento_identidad')}
                     className={inputClass}
                     placeholder="Cédula o pasaporte"
@@ -161,7 +169,7 @@ export const SolicitudCuentaPage = () => {
               </div>
 
               <div>
-                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-400">
+                <label htmlFor="correo_personal" className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-400">
                   Correo personal (para notificación)
                 </label>
                 <div className="relative">
@@ -170,8 +178,11 @@ export const SolicitudCuentaPage = () => {
                     aria-hidden
                   />
                   <input
-                    {...register('correo_personal')}
+                    id="correo_personal"
+                    name="correo_personal"
                     type="email"
+                    autoComplete="email"
+                    {...register('correo_personal')}
                     className={inputClass}
                     placeholder="correo@ejemplo.com"
                   />
@@ -184,7 +195,7 @@ export const SolicitudCuentaPage = () => {
               </div>
 
               <div>
-                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-400">
+                <label htmlFor="telefono" className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-400">
                   Teléfono de contacto
                 </label>
                 <div className="relative">
@@ -193,8 +204,11 @@ export const SolicitudCuentaPage = () => {
                     aria-hidden
                   />
                   <input
-                    {...register('telefono')}
+                    id="telefono"
+                    name="telefono"
                     type="tel"
+                    autoComplete="tel"
+                    {...register('telefono')}
                     className={inputClass}
                     placeholder="3001234567"
                   />
@@ -207,10 +221,12 @@ export const SolicitudCuentaPage = () => {
               </div>
 
               <div>
-                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-400">
+                <label htmlFor="tipo_usuario" className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-400">
                   Tipo de usuario
                 </label>
                 <select
+                  id="tipo_usuario"
+                  name="tipo_usuario"
                   {...register('tipo_usuario')}
                   className={`${inputClass} appearance-none`}
                 >
@@ -225,10 +241,12 @@ export const SolicitudCuentaPage = () => {
               </div>
 
               <div>
-                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-400">
+                <label htmlFor="motivo" className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-400">
                   Facultad / motivo de solicitud
                 </label>
                 <textarea
+                  id="motivo"
+                  name="motivo"
                   {...register('motivo')}
                   rows={3}
                   className={`${inputClass} resize-none pt-3`}

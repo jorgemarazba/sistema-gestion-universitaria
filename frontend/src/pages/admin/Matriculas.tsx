@@ -155,6 +155,8 @@ export const AdminMatriculas = () => {
           <div className="relative flex-1 w-full">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={20} />
             <input
+              id="busqueda"
+              name="busqueda"
               type="text"
               placeholder="Buscar por estudiante o programa..."
               value={busqueda}

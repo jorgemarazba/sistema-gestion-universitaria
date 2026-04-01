@@ -1,0 +1,123 @@
+// Código para agregar al Dashboard.tsx
+
+// 1. Agregar estas funciones después del estado (después de la línea del const [submitting...])
+
+  // Cargar profesores cuando se abre el modal de curso
+  useEffect(() => {
+    if (modalCurso) {
+      cargarProfesores();
+    }
+  }, [modalCurso]);
+
+  const cargarProfesores = async () => {
+    try {
+      const response = await UsuariosService.getAll();
+      const usuarios = Array.isArray(response) ? response : response.data || [];
+      const profesoresList = usuarios.filter((u: any) => u.rol === 'profesor');
+      setProfesores(profesoresList);
+    } catch (err) {
+      console.error('Error al cargar profesores:', err);
+    }
+  };
+
+  const handleCrearCurso = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setSubmitting(true);
+      await CursosService.create(formData);
+      showToast('Curso creado exitosamente', 'success');
+      setModalCurso(false);
+      // Resetear formulario
+      setFormData({
+        codigo: '',
+        nombre: '',
+        descripcion: '',
+        carrera: '',
+        nivel: NivelCurso.PREGRADO,
+        modalidad: ModalidadCurso.PRESENCIAL,
+        creditos: 3,
+        semestre: 1,
+        cupos: 30,
+        profesorId: '',
+      });
+    } catch (err) {
+      showToast('Error al crear el curso', 'error');
+      console.error(err);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+// 2. Cambiar el div del formulario a form con onSubmit:
+// Reemplazar:
+// <div className="p-6 space-y-4">
+// Con:
+// <form onSubmit={handleCrearCurso} className="p-6 space-y-4">
+
+// 3. Agregar los campos faltantes en el formulario (después del textarea de descripción):
+
+              {/* Profesor */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-200 mb-1">Profesor</label>
+                <select 
+                  value={formData.profesorId}
+                  onChange={(e) => setFormData({...formData, profesorId: e.target.value})}
+                  className="w-full px-3 py-2 bg-[#1f2937] border border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition text-white"
+                >
+                  <option value="">Seleccionar profesor...</option>
+                  {profesores.map((prof) => (
+                    <option key={prof.id} value={prof.id}>
+                      {prof.nombre} {prof.apellido}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Modalidad */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-200 mb-1">Modalidad</label>
+                <div className="flex gap-2">
+                  {Object.values(ModalidadCurso).map((mod) => (
+                    <button
+                      key={mod}
+                      type="button"
+                      onClick={() => setFormData({...formData, modalidad: mod})}
+                      className={`px-3 py-1.5 text-xs font-medium rounded-full border transition capitalize ${
+                        formData.modalidad === mod
+                          ? 'bg-green-500/20 border-green-400 text-green-300'
+                          : 'border-gray-500 text-gray-300 hover:bg-gray-700'
+                      }`}
+                    >
+                      {mod === 'presencial' ? 'Presencial' : mod === 'virtual' ? 'Virtual' : 'Híbrido'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Cupos */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-200 mb-1">Cupos</label>
+                  <input 
+                    type="number" 
+                    min="1"
+                    value={formData.cupos}
+                    onChange={(e) => setFormData({...formData, cupos: parseInt(e.target.value)})}
+                    className="w-full px-3 py-2 bg-[#1f2937] border border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition text-white" 
+                  />
+                </div>
+              </div>
+
+// 4. Actualizar el botón Crear Curso:
+// Reemplazar:
+// <button className="flex-1 px-4 py-2 bg-linear-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition font-medium">
+//   Crear Curso
+// </button>
+// Con:
+// <button 
+//   type="submit"
+//   disabled={submitting}
+//   className="flex-1 px-4 py-2 bg-linear-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition font-medium disabled:opacity-50"
+// >
+//   {submitting ? 'Creando...' : 'Crear Curso'}
+// </button>

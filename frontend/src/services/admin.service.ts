@@ -29,10 +29,8 @@ export interface PendingSolicitud {
 export const getAdminStats = async (): Promise<AdminStats> => {
   try {
     const response = await api.get('/usuarios/dashboard/stats');
-    console.log('📊 Stats API Response:', response.data);
     // El interceptor envuelve la respuesta en { success: true, data: {...} }
     const data = response.data?.data || response.data;
-    console.log('📊 Extracted Stats:', data);
     return data;
   } catch (error) {
     console.error('❌ Error fetching admin stats:', error);
@@ -46,10 +44,8 @@ export const getAdminStats = async (): Promise<AdminStats> => {
 export const getRoleDistribution = async (): Promise<RoleDistribution[]> => {
   try {
     const response = await api.get('/usuarios/dashboard/roles');
-    console.log('👥 Roles API Response:', response.data);
     // El interceptor envuelve la respuesta en { success: true, data: {...} }
     const data = response.data?.data || response.data;
-    console.log('👥 Extracted Roles:', data);
     return data;
   } catch (error) {
     console.error('❌ Error fetching role distribution:', error);
@@ -63,10 +59,8 @@ export const getRoleDistribution = async (): Promise<RoleDistribution[]> => {
 export const getPendingSolicitudes = async (): Promise<PendingSolicitud[]> => {
   try {
     const response = await api.get('/usuarios/pendientes');
-    console.log('⏳ Pending API Response:', response.data);
     // El interceptor envuelve la respuesta en { success: true, data: {...} }
     const data = response.data?.data || response.data;
-    console.log('⏳ Extracted Pending:', data);
     return data;
   } catch (error) {
     console.error('❌ Error fetching pending solicitudes:', error);
@@ -83,10 +77,8 @@ export const updateUserStatus = async (
 ): Promise<any> => {
   try {
     const response = await api.patch(`/usuarios/${userId}/status`, { status });
-    console.log('✏️ Update Status API Response:', response.data);
     // El interceptor envuelve la respuesta en { success: true, data: {...} }
     const data = response.data?.data || response.data;
-    console.log('✏️ Extracted Update Result:', data);
     return data;
   } catch (error) {
     console.error('❌ Error updating user status:', error);

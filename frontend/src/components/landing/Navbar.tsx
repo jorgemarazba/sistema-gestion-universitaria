@@ -40,6 +40,8 @@ export function Navbar() {
               aria-hidden
             />
             <input
+              id="search"
+              name="search"
               type="search"
               placeholder="Buscar..."
               className="w-full rounded-full border border-slate-700 bg-slate-900/80 py-2 pl-10 pr-4 text-sm text-white outline-none ring-violet-500/30 placeholder:text-slate-500 focus:border-violet-500 focus:ring-2"

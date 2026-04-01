@@ -4,7 +4,7 @@ const API_URL = 'http://localhost:3003/api/v1';
 
 // Interfaz de Usuario
 export interface Usuario {
-  id: string;
+  id_usuario: string;
   nombre: string;
   apellido: string;
   email?: string;
@@ -37,13 +37,19 @@ usuariosApi.interceptors.request.use(
 export const UsuariosService = {
   // Obtener todos los usuarios
   getAll: async (): Promise<Usuario[]> => {
-    const response = await usuariosApi.get('/');
-    return response.data;
+    const response = await usuariosApi.get<{ success: boolean; data: Usuario[] }>('/');
+    return response.data.data || [];
   },
 
   // Obtener un usuario por ID
   getById: async (id: string): Promise<Usuario> => {
-    const response = await usuariosApi.get(`/${id}`);
-    return response.data;
+    const response = await usuariosApi.get<{ success: boolean; data: Usuario }>(`/${id}`);
+    return response.data.data;
+  },
+
+  // Obtener usuarios por rol (para profesores)
+  getByRol: async (rol: string): Promise<Usuario[]> => {
+    const response = await usuariosApi.get<{ success: boolean; data: Usuario[] }>(`?rol=${rol}`);
+    return response.data.data || [];
   },
 };

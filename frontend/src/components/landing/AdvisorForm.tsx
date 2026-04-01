@@ -77,10 +77,12 @@ export function AdvisorForm() {
       >
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
+            <label htmlFor="nombres" className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
               Nombres
             </label>
             <input
+              id="nombres"
+              autoComplete="given-name"
               {...register('nombres')}
               className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-900 outline-none ring-violet-500/30 focus:ring-2 dark:border-slate-600 dark:bg-slate-900 dark:text-white"
             />
@@ -89,10 +91,12 @@ export function AdvisorForm() {
             )}
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
+            <label htmlFor="apellidos" className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
               Apellidos
             </label>
             <input
+              id="apellidos"
+              autoComplete="family-name"
               {...register('apellidos')}
               className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-900 outline-none ring-violet-500/30 focus:ring-2 dark:border-slate-600 dark:bg-slate-900 dark:text-white"
             />
@@ -103,11 +107,13 @@ export function AdvisorForm() {
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
+          <label htmlFor="email" className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
             Email
           </label>
           <input
+            id="email"
             type="email"
+            autoComplete="email"
             {...register('email')}
             className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-900 outline-none ring-violet-500/30 focus:ring-2 dark:border-slate-600 dark:bg-slate-900 dark:text-white"
           />
@@ -126,6 +132,7 @@ export function AdvisorForm() {
                 {selected.flag}
               </span>
               <select
+                id="paisCodigo"
                 {...register('paisCodigo')}
                 className="w-full appearance-none rounded-xl border border-slate-200 py-2 pl-11 pr-8 text-sm text-slate-900 outline-none ring-violet-500/30 focus:ring-2 dark:border-slate-600 dark:bg-slate-900 dark:text-white"
               >
@@ -141,8 +148,10 @@ export function AdvisorForm() {
                 {selected.dial}
               </span>
               <input
+                id="telefono"
                 {...register('telefono')}
                 type="tel"
+                autoComplete="tel"
                 placeholder="Número móvil"
                 className="min-w-0 flex-1 rounded-xl border border-slate-200 px-3 py-2 text-slate-900 outline-none ring-violet-500/30 focus:ring-2 dark:border-slate-600 dark:bg-slate-900 dark:text-white"
               />
@@ -155,10 +164,11 @@ export function AdvisorForm() {
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
+            <label htmlFor="ciudad" className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
               Ciudad
             </label>
             <input
+              id="ciudad"
               {...register('ciudad')}
               className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-900 outline-none ring-violet-500/30 focus:ring-2 dark:border-slate-600 dark:bg-slate-900 dark:text-white"
             />
@@ -167,10 +177,11 @@ export function AdvisorForm() {
             )}
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
+            <label htmlFor="modalidad" className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
               Modalidad
             </label>
             <select
+              id="modalidad"
               {...register('modalidad')}
               className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-900 outline-none ring-violet-500/30 focus:ring-2 dark:border-slate-600 dark:bg-slate-900 dark:text-white"
             >
@@ -182,10 +193,11 @@ export function AdvisorForm() {
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
+          <label htmlFor="programa" className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
             Programa de interés
           </label>
           <select
+            id="programa"
             {...register('programa')}
             className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-900 outline-none ring-violet-500/30 focus:ring-2 dark:border-slate-600 dark:bg-slate-900 dark:text-white"
           >

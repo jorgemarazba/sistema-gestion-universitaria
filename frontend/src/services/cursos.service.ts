@@ -11,9 +11,10 @@ export const CursosService = {
     if (modalidad) params.append('modalidad', modalidad);
     
     const query = params.toString() ? `?${params.toString()}` : '';
-    const response = await api.get<{success: boolean; data: Curso[]}>(`${API_URL}${query}`);
-    // La API devuelve {success: true, data: [...]}
-    return response.data.data || [];
+    const response = await api.get<Curso[] | {success: boolean; data: Curso[]}>(`${API_URL}${query}`);
+    // La API puede devolver {success: true, data: [...]} o directamente [...]
+    const data = Array.isArray(response.data) ? response.data : (response.data.data || []);
+    return data;
   },
 
   async getById(id: string): Promise<Curso> {
@@ -36,12 +37,12 @@ export const CursosService = {
   },
 
   async getCarreras(): Promise<string[]> {
-    const response = await api.get<string[]>(`${API_URL}/carreras`);
-    return response.data;
+    const response = await api.get<{success: boolean; data: string[]}>(`${API_URL}/carreras`);
+    return response.data.data || [];
   },
 
   async getModalidades(): Promise<string[]> {
-    const response = await api.get<string[]>(`${API_URL}/modalidades`);
-    return response.data;
+    const response = await api.get<{success: boolean; data: string[]}>(`${API_URL}/modalidades`);
+    return response.data.data || [];
   },
 };

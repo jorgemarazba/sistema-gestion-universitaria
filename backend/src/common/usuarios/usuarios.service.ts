@@ -8,6 +8,7 @@ import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
 import { MailService } from '../mail/mail.service';
 import { NotificacionesService } from '../notificaciones/notificaciones.service';
+import { PresenceGateway } from '../presence/presence.gateway';
 import {
   generarContrasenaTemporal,
   generarCorreoInstitucional,
@@ -19,6 +20,7 @@ export class UsuariosService {
     @InjectRepository(Usuario)
     private readonly usuariosRepo: Repository<Usuario>,
     private readonly mailService: MailService,
+    private readonly presenceGateway: PresenceGateway,
     private readonly notificacionesService: NotificacionesService,
   ) {}
 
@@ -215,12 +217,14 @@ export class UsuariosService {
     });
   }
 
-  async getEstadisticas(): Promise<{ totalUsuarios: number; usuariosActivos: number; usuariosPendientes: number; usuariosSuspendidos: number }> {
+  async getEstadisticas(): Promise<{ totalUsuarios: number; usuariosActivos: number; usuariosPendientes: number; usuariosSuspendidos: number; usuariosOnline: number }> {
     const totalUsuarios = await this.usuariosRepo.count();
     const usuariosActivos = await this.usuariosRepo.count({ where: { estado: 'activo' } });
     const usuariosPendientes = await this.usuariosRepo.count({ where: { estado: 'pendiente' } });
     const usuariosSuspendidos = await this.usuariosRepo.count({ where: { estado: 'suspendido' } });
-    return { totalUsuarios, usuariosActivos, usuariosPendientes, usuariosSuspendidos };
+    // Conteo REAL de usuarios conectados vía WebSocket
+    const usuariosOnline = this.presenceGateway.getUsuariosOnlineCount();
+    return { totalUsuarios, usuariosActivos, usuariosPendientes, usuariosSuspendidos, usuariosOnline };
   }
 
   async getDistribucionRoles(): Promise<{ rol: string; cantidad: number }[]> {

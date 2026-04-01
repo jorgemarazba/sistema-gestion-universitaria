@@ -71,10 +71,12 @@ export function AspiranteVirtualForm() {
     >
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
+          <label htmlFor="nombres" className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
             Nombres
           </label>
           <input
+            id="nombres"
+            autoComplete="given-name"
             {...register('nombres')}
             className="w-full rounded-xl border border-slate-200 px-3 py-2 dark:border-slate-600 dark:bg-slate-950 dark:text-white"
           />
@@ -83,10 +85,12 @@ export function AspiranteVirtualForm() {
           )}
         </div>
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
+          <label htmlFor="apellidos" className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
             Apellidos
           </label>
           <input
+            id="apellidos"
+            autoComplete="family-name"
             {...register('apellidos')}
             className="w-full rounded-xl border border-slate-200 px-3 py-2 dark:border-slate-600 dark:bg-slate-950 dark:text-white"
           />
@@ -106,6 +110,7 @@ export function AspiranteVirtualForm() {
               {selected.flag}
             </span>
             <select
+              id="paisCodigo"
               {...register('paisCodigo')}
               className="w-full appearance-none rounded-xl border border-slate-200 py-2 pl-11 pr-3 text-sm dark:border-slate-600 dark:bg-slate-950 dark:text-white"
             >
@@ -121,8 +126,10 @@ export function AspiranteVirtualForm() {
               {selected.dial}
             </span>
             <input
+              id="telefono"
               {...register('telefono')}
               type="tel"
+              autoComplete="tel"
               placeholder="Número"
               className="min-w-0 flex-1 rounded-xl border border-slate-200 px-3 py-2 dark:border-slate-600 dark:bg-slate-950 dark:text-white"
             />
@@ -135,10 +142,11 @@ export function AspiranteVirtualForm() {
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
+          <label htmlFor="tipoDocumento" className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
             Documento de identificación
           </label>
           <select
+            id="tipoDocumento"
             {...register('tipoDocumento')}
             className="w-full rounded-xl border border-slate-200 px-3 py-2 dark:border-slate-600 dark:bg-slate-950 dark:text-white"
           >
@@ -156,10 +164,11 @@ export function AspiranteVirtualForm() {
           )}
         </div>
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
+          <label htmlFor="numeroDocumento" className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
             Número de documento
           </label>
           <input
+            id="numeroDocumento"
             {...register('numeroDocumento')}
             className="w-full rounded-xl border border-slate-200 px-3 py-2 dark:border-slate-600 dark:bg-slate-950 dark:text-white"
           />
@@ -172,11 +181,13 @@ export function AspiranteVirtualForm() {
       </div>
 
       <div>
-        <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
+        <label htmlFor="email" className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
           Email
         </label>
         <input
+          id="email"
           type="email"
+          autoComplete="email"
           {...register('email')}
           className="w-full rounded-xl border border-slate-200 px-3 py-2 dark:border-slate-600 dark:bg-slate-950 dark:text-white"
         />
@@ -186,10 +197,11 @@ export function AspiranteVirtualForm() {
       </div>
 
       <div>
-        <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
+        <label htmlFor="dondeVives" className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
           ¿Dónde vives?
         </label>
         <input
+          id="dondeVives"
           {...register('dondeVives')}
           placeholder="Ciudad, barrio o dirección general"
           className="w-full rounded-xl border border-slate-200 px-3 py-2 dark:border-slate-600 dark:bg-slate-950 dark:text-white"
@@ -201,10 +213,11 @@ export function AspiranteVirtualForm() {
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
+          <label htmlFor="metodologia" className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
             Metodología
           </label>
           <select
+            id="metodologia"
             {...register('metodologia')}
             className="w-full rounded-xl border border-slate-200 px-3 py-2 dark:border-slate-600 dark:bg-slate-950 dark:text-white"
           >
@@ -220,10 +233,11 @@ export function AspiranteVirtualForm() {
           )}
         </div>
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
+          <label htmlFor="areaEstudio" className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
             Área de estudio
           </label>
           <select
+            id="areaEstudio"
             {...register('areaEstudio')}
             className="w-full rounded-xl border border-slate-200 px-3 py-2 dark:border-slate-600 dark:bg-slate-950 dark:text-white"
           >
@@ -241,10 +255,11 @@ export function AspiranteVirtualForm() {
       </div>
 
       <div>
-        <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
+        <label htmlFor="programa" className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
           Programa
         </label>
         <select
+          id="programa"
           {...register('programa')}
           className="w-full rounded-xl border border-slate-200 px-3 py-2 dark:border-slate-600 dark:bg-slate-950 dark:text-white"
         >
@@ -269,6 +284,7 @@ export function AspiranteVirtualForm() {
         </button>
         <label className="flex max-w-md cursor-pointer items-start gap-2 text-sm text-slate-600 dark:text-slate-400">
           <input
+            id="aceptaTerminos"
             type="checkbox"
             {...register('aceptaTerminos')}
             className="mt-1 size-4 rounded border-slate-300 text-violet-600"

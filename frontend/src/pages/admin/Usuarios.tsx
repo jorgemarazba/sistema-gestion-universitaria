@@ -240,6 +240,8 @@ export const AdminUsuarios = () => {
           <div className="relative flex-1 w-full">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={20} />
             <input
+              id="busqueda"
+              name="busqueda"
               type="text"
               placeholder="Buscar por nombre, correo o documento..."
               value={busqueda}
@@ -458,8 +460,10 @@ export const AdminUsuarios = () => {
             <form onSubmit={handleCrearUsuario} className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm text-gray-400 mb-1 block">Nombre</label>
+                  <label htmlFor="nombre" className="text-sm text-gray-400 mb-1 block">Nombre</label>
                   <input
+                    id="nombre"
+                    name="nombre"
                     type="text"
                     value={formNuevoUsuario.nombre}
                     onChange={(e) => setFormNuevoUsuario({...formNuevoUsuario, nombre: e.target.value})}
@@ -468,8 +472,10 @@ export const AdminUsuarios = () => {
                   />
                 </div>
                 <div>
-                  <label className="text-sm text-gray-400 mb-1 block">Apellido</label>
+                  <label htmlFor="apellido" className="text-sm text-gray-400 mb-1 block">Apellido</label>
                   <input
+                    id="apellido"
+                    name="apellido"
                     type="text"
                     value={formNuevoUsuario.apellido}
                     onChange={(e) => setFormNuevoUsuario({...formNuevoUsuario, apellido: e.target.value})}
@@ -480,8 +486,10 @@ export const AdminUsuarios = () => {
               </div>
 
               <div>
-                <label className="text-sm text-gray-400 mb-1 block">Documento de Identidad</label>
+                <label htmlFor="documento" className="text-sm text-gray-400 mb-1 block">Documento de Identidad</label>
                 <input
+                  id="documento"
+                  name="documento"
                   type="text"
                   value={formNuevoUsuario.documentoIdentidad}
                   onChange={(e) => setFormNuevoUsuario({...formNuevoUsuario, documentoIdentidad: e.target.value})}
@@ -491,8 +499,10 @@ export const AdminUsuarios = () => {
               </div>
 
               <div>
-                <label className="text-sm text-gray-400 mb-1 block">Correo Personal</label>
+                <label htmlFor="correo" className="text-sm text-gray-400 mb-1 block">Correo Personal</label>
                 <input
+                  id="correo"
+                  name="correo"
                   type="email"
                   value={formNuevoUsuario.correoPersonal}
                   onChange={(e) => setFormNuevoUsuario({...formNuevoUsuario, correoPersonal: e.target.value})}
@@ -502,8 +512,10 @@ export const AdminUsuarios = () => {
               </div>
 
               <div>
-                <label className="text-sm text-gray-400 mb-1 block">Teléfono</label>
+                <label htmlFor="telefono" className="text-sm text-gray-400 mb-1 block">Teléfono</label>
                 <input
+                  id="telefono"
+                  name="telefono"
                   type="tel"
                   value={formNuevoUsuario.telefono}
                   onChange={(e) => setFormNuevoUsuario({...formNuevoUsuario, telefono: e.target.value})}
@@ -513,8 +525,10 @@ export const AdminUsuarios = () => {
               </div>
 
               <div>
-                <label className="text-sm text-gray-400 mb-1 block">Rol</label>
+                <label htmlFor="rol" className="text-sm text-gray-400 mb-1 block">Rol</label>
                 <select
+                  id="rol"
+                  name="rol"
                   value={formNuevoUsuario.rol}
                   onChange={(e) => setFormNuevoUsuario({...formNuevoUsuario, rol: e.target.value as Rol})}
                   className="w-full px-3 py-2 bg-slate-800 border border-gray-600 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -579,8 +593,10 @@ export const AdminUsuarios = () => {
             <form onSubmit={handleEditarUsuario} className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-1">Nombre</label>
+                  <label htmlFor="edit-nombre" className="block text-sm font-medium text-gray-400 mb-1">Nombre</label>
                   <input 
+                    id="edit-nombre"
+                    name="edit-nombre"
                     type="text" 
                     value={usuarioEditando.nombre}
                     onChange={(e) => setUsuarioEditando({...usuarioEditando, nombre: e.target.value})}
@@ -588,8 +604,10 @@ export const AdminUsuarios = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-1">Apellido</label>
+                  <label htmlFor="edit-apellido" className="block text-sm font-medium text-gray-400 mb-1">Apellido</label>
                   <input 
+                    id="edit-apellido"
+                    name="edit-apellido"
                     type="text" 
                     value={usuarioEditando.apellido}
                     onChange={(e) => setUsuarioEditando({...usuarioEditando, apellido: e.target.value})}
@@ -598,8 +616,10 @@ export const AdminUsuarios = () => {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1">Teléfono</label>
+                <label htmlFor="edit-telefono" className="block text-sm font-medium text-gray-400 mb-1">Teléfono</label>
                 <input 
+                  id="edit-telefono"
+                  name="edit-telefono"
                   type="text" 
                   value={usuarioEditando.telefono || ''}
                   onChange={(e) => setUsuarioEditando({...usuarioEditando, telefono: e.target.value})}
@@ -607,8 +627,10 @@ export const AdminUsuarios = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1">Correo Personal</label>
+                <label htmlFor="edit-correo" className="block text-sm font-medium text-gray-400 mb-1">Correo Personal</label>
                 <input 
+                  id="edit-correo"
+                  name="edit-correo"
                   type="email" 
                   value={usuarioEditando.correoPersonal || ''}
                   onChange={(e) => setUsuarioEditando({...usuarioEditando, correoPersonal: e.target.value})}
@@ -623,8 +645,10 @@ export const AdminUsuarios = () => {
               )}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-1">Rol</label>
+                  <label htmlFor="edit-rol" className="block text-sm font-medium text-gray-400 mb-1">Rol</label>
                   <select 
+                    id="edit-rol"
+                    name="edit-rol"
                     value={usuarioEditando.rol}
                     onChange={(e) => setUsuarioEditando({...usuarioEditando, rol: e.target.value as Rol})}
                     className="w-full px-3 py-2 bg-[#374151] border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
@@ -635,8 +659,10 @@ export const AdminUsuarios = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-1">Estado</label>
+                  <label htmlFor="edit-estado" className="block text-sm font-medium text-gray-400 mb-1">Estado</label>
                   <select 
+                    id="edit-estado"
+                    name="edit-estado"
                     value={usuarioEditando.estado}
                     onChange={(e) => setUsuarioEditando({...usuarioEditando, estado: e.target.value as Usuario['estado']})}
                     className="w-full px-3 py-2 bg-[#374151] border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"

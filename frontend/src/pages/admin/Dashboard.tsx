@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { 
@@ -8,7 +8,6 @@ import {
   FileText,
   X,
   Users,
-  UserCircle,
   BookOpen,
   TrendingUp,
   Activity,
@@ -18,9 +17,19 @@ import {
   Loader2,
   CheckCircle2,
   XCircle,
-  Info
+  Info,
+  DollarSign,
+  Library
 } from 'lucide-react';
+import { io, Socket } from 'socket.io-client';
 import { getAdminStats, getRoleDistribution, type AdminStats, type RoleDistribution } from '../../services/admin.service';
+import type { CreateCursoData } from '../../types/curso.types';
+import { ModalidadCurso, NivelCurso, type NivelCursoType, type ModalidadCursoType } from '../../types/curso.types';
+import { useAuthStore } from '../../store/authStore';
+import { CursosService } from '../../services/cursos.service';
+import { UsuariosService } from '../../services/usuarios.service';
+import type { Usuario } from '../../services/usuarios.service';
+import { ProgramasService } from '../../services/programas.service';
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3003/api/v1';
 
@@ -72,6 +81,83 @@ interface ToastNotification {
 
 export const AdminDashboard = () => {
   const navigate = useNavigate();
+  const [carreras, setCarreras] = useState<Array<{id: string, nombre: string}>>([]);
+  const [cargandoCarreras, setCargandoCarreras] = useState(false);
+  const [cursosExistentes, setCursosExistentes] = useState<Array<{id: string, codigo: string, nombre: string}>>([]);
+
+  // Cargar profesores y carreras desde el backend
+  useEffect(() => {
+    const fetchProfesores = async () => {
+      try {
+        const usuarios = await UsuariosService.getAll();
+        console.log('Usuarios recibidos:', usuarios);
+        const profesoresFiltrados = usuarios.filter(
+          (u) => u.rol === 'profesor'
+        );
+        console.log('Profesores filtrados:', profesoresFiltrados);
+        setProfesores(profesoresFiltrados);
+      } catch (err) {
+        console.error('Error al cargar profesores:', err);
+        addToast('error', 'Error', 'No se pudieron cargar los profesores del sistema');
+      }
+    };
+
+    const fetchCarreras = async () => {
+      try {
+        setCargandoCarreras(true);
+        const programasData = await ProgramasService.getAll();
+        const programasActivos = programasData.filter((p) => p.estado === 'activo');
+        setCarreras(programasActivos);
+      } catch (err) {
+        console.error('Error al cargar carreras:', err);
+      } finally {
+        setCargandoCarreras(false);
+      }
+    };
+
+    const fetchCursosExistentes = async () => {
+      try {
+        const cursosData = await CursosService.getAll();
+        setCursosExistentes(cursosData);
+      } catch (err) {
+        console.error('Error al cargar cursos existentes:', err);
+      }
+    };
+
+    fetchProfesores();
+    fetchCarreras();
+    fetchCursosExistentes();
+  }, []);
+
+  // Handler para crear curso
+  const handleCrearCurso = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setSubmitting(true);
+      await CursosService.create(formData);
+      addToast('success', '¡Curso Creado! 🎓', `El curso ${formData.nombre} ha sido creado exitosamente.`);
+      setModalCurso(false);
+      setFormData({
+        codigo: '',
+        nombre: '',
+        descripcion: '',
+        carrera: '',
+        nivel: NivelCurso.PREGRADO,
+        modalidad: ModalidadCurso.PRESENCIAL,
+        creditos: 3,
+        semestre: 1,
+        cupos: 30,
+        profesorId: '',
+        horaInicio: '',
+        horaFin: '',
+      });
+    } catch (err: any) {
+      console.error('Error al crear curso:', err);
+      addToast('error', 'Error al Crear Curso', err.response?.data?.message || 'Hubo un problema al crear el curso. Por favor, intenta nuevamente.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [roleDistribution, setRoleDistribution] = useState<RoleDistribution[]>([]);
   const [tickets, setTickets] = useState<Ticket[]>([]);
@@ -83,11 +169,35 @@ export const AdminDashboard = () => {
   // Estado para notificaciones toast
   const [toasts, setToasts] = useState<ToastNotification[]>([]);
   
+  // Estado para usuarios online (WebSocket real-time)
+  const [usuariosOnline, setUsuariosOnline] = useState(0);
+  const socketRef = useRef<Socket | null>(null);
+  
   // Estados para modales
   const [modalUsuario, setModalUsuario] = useState(false);
   const [modalCurso, setModalCurso] = useState(false);
   const [modalNotificacion, setModalNotificacion] = useState(false);
   const [modalReporte, setModalReporte] = useState(false);
+
+  // Estado para formulario de crear curso
+  const [formData, setFormData] = useState<CreateCursoData & { horaInicio?: string; horaFin?: string }>({
+    codigo: '',
+    nombre: '',
+    descripcion: '',
+    carrera: '',
+    nivel: NivelCurso.PREGRADO,
+    modalidad: ModalidadCurso.PRESENCIAL,
+    creditos: 3,
+    semestre: 1,
+    cupos: 30,
+    profesorId: '',
+    horaInicio: '',
+    horaFin: '',
+  });
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [profesores, setProfesores] = useState<Usuario[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [submitting, setSubmitting] = useState(false);
 
   // Estado para formulario de crear usuario
   const [formUsuario, setFormUsuario] = useState({
@@ -165,7 +275,6 @@ export const AdminDashboard = () => {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        console.log('🔄 Iniciando carga de datos del dashboard...');
         setLoading(true);
         const [statsData, rolesData, ticketsData, pagosData, usuariosData] = await Promise.all([
           getAdminStats(),
@@ -174,7 +283,6 @@ export const AdminDashboard = () => {
           axios.get(`${API_URL}/pagos/pendientes?limite=5`).then(r => Array.isArray(r.data) ? r.data : (r.data.data || [])),
           axios.get(`${API_URL}/usuarios/recientes?limite=5`).then(r => Array.isArray(r.data) ? r.data : (r.data.data || []))
         ]);
-        console.log('✅ Datos cargados:', { statsData, rolesData, ticketsData, pagosData, usuariosData });
         setStats(statsData);
         setRoleDistribution(rolesData);
         setTickets(ticketsData);
@@ -182,7 +290,6 @@ export const AdminDashboard = () => {
         setUsuariosRecientes(usuariosData);
         setError(null);
       } catch (err) {
-        console.error('❌ Error crítico en fetchDashboardData:', err);
         const errorMsg = err instanceof Error ? err.message : JSON.stringify(err);
         setError(`Error al cargar: ${errorMsg}`);
       } finally {
@@ -192,6 +299,52 @@ export const AdminDashboard = () => {
 
     fetchDashboardData();
   }, []);
+
+  const user = useAuthStore((state) => state.user);
+
+  // Conexión WebSocket para usuarios online en tiempo real
+  useEffect(() => {
+    // Conectar al namespace /presence
+    const socket = io('http://localhost:3003/presence');
+    socketRef.current = socket;
+
+    socket.on('connect', () => {
+      if (user?.id) {
+        socket.emit('usuario:autenticado', {
+          userId: user.id,
+          nombre: user.nombre || 'Admin',
+          rol: user.rol || 'administrador'
+        });
+      } else {
+        // Usar un ID temporal para pruebas
+        const tempId = 'temp-' + Date.now();
+        socket.emit('usuario:autenticado', {
+          userId: tempId,
+          nombre: 'Admin',
+          rol: 'administrador'
+        });
+      }
+    });
+
+    socket.on('usuarios:online', (data: { count: number; usuarios: any[] }) => {
+      setUsuariosOnline(data.count);
+    });
+
+    socket.on('disconnect', () => {
+    });
+
+    // Heartbeat cada 30 segundos para mantener la conexión activa
+    const heartbeatInterval = setInterval(() => {
+      if (socket.connected) {
+        socket.emit('usuario:heartbeat');
+      }
+    }, 30000);
+
+    return () => {
+      clearInterval(heartbeatInterval);
+      socket.disconnect();
+    };
+  }, [user]);
 
   const getEstadoColor = (estado: string) => {
     const estadoLower = estado.toLowerCase();
@@ -393,26 +546,31 @@ export const AdminDashboard = () => {
           
           {/* Tarjetas de métricas */}
           <div className="space-y-4">
-            {/* Usuarios Activos */}
+            {/* Usuarios Activos - En tiempo real vía WebSocket */}
             <div className="group bg-slate-700/30 hover:bg-slate-700/50 border border-slate-600/30 rounded-xl p-4 transition-all duration-300">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center border border-emerald-500/30">
+                  <div className="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center border border-emerald-500/30 relative">
                     <Zap className="w-6 h-6 text-emerald-400" />
+                    {/* Indicador de conexión en tiempo real */}
+                    <span className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full animate-pulse border-2 border-slate-800"></span>
                   </div>
                   <div>
-                    <p className="text-slate-400 text-sm font-medium">Usuarios Activos</p>
-                    <p className="text-2xl font-bold text-white">{stats?.activeUsers ?? 0}</p>
+                    <p className="text-slate-400 text-sm font-medium">Usuarios Conectados</p>
+                    <div className="flex items-baseline gap-2">
+                      <p className="text-2xl font-bold text-white">{usuariosOnline}</p>
+                      <p className="text-sm text-slate-400">en tiempo real</p>
+                    </div>
                   </div>
                 </div>
                 <div className="text-right">
-                  <span className="text-xs text-emerald-400 font-medium bg-emerald-500/10 px-2 py-1 rounded-full">
-                    Operativo
-                  </span>
+                  {/* Badge 'En vivo' removido - ya está en el header */}
                 </div>
               </div>
               <div className="mt-3 h-1 bg-slate-600 rounded-full overflow-hidden">
-                <div className="h-full bg-emerald-500 rounded-full transition-all duration-700" style={{ width: `${Math.min((stats?.activeUsers ?? 0) * 10, 100)}%` }}></div>
+                <div className="h-full bg-emerald-500 rounded-full transition-all duration-700" 
+                  style={{ width: `${Math.min((usuariosOnline / (stats?.totalUsers || 1)) * 100, 100)}%` }}>
+                </div>
               </div>
             </div>
 
@@ -436,29 +594,6 @@ export const AdminDashboard = () => {
               </div>
               <div className="mt-3 h-1 bg-slate-600 rounded-full overflow-hidden">
                 <div className={`h-full rounded-full transition-all duration-700 ${(stats?.pendingRequests ?? 0) > 5 ? 'bg-rose-500' : 'bg-amber-500'}`} style={{ width: `${Math.min((stats?.pendingRequests ?? 0) * 20, 100)}%` }}></div>
-              </div>
-            </div>
-
-            {/* Total de Usuarios */}
-            <div className="group bg-slate-700/30 hover:bg-slate-700/50 border border-slate-600/30 rounded-xl p-4 transition-all duration-300">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center border border-blue-500/30">
-                    <UserCircle className="w-6 h-6 text-blue-400" />
-                  </div>
-                  <div>
-                    <p className="text-slate-400 text-sm font-medium">Total de Usuarios</p>
-                    <p className="text-2xl font-bold text-white">{stats?.totalUsers ?? 0}</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <span className="text-xs text-blue-400 font-medium bg-blue-500/10 px-2 py-1 rounded-full">
-                    Registrados
-                  </span>
-                </div>
-              </div>
-              <div className="mt-3 h-1 bg-slate-600 rounded-full overflow-hidden">
-                <div className="h-full bg-blue-500 rounded-full transition-all duration-700" style={{ width: '100%' }}></div>
               </div>
             </div>
           </div>
@@ -650,18 +785,22 @@ export const AdminDashboard = () => {
             <div className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-1">Nombre</label>
+                  <label htmlFor="nombre" className="block text-sm font-medium text-gray-400 mb-1">Nombre</label>
                   <input 
                     type="text" 
+                    id="nombre"
+                    name="nombre"
                     value={formUsuario.nombre}
                     onChange={(e) => setFormUsuario({...formUsuario, nombre: e.target.value})}
                     className="w-full px-3 py-2 bg-[#1f2937] border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition" 
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-1">Apellido</label>
+                  <label htmlFor="apellido" className="block text-sm font-medium text-gray-400 mb-1">Apellido</label>
                   <input 
                     type="text" 
+                    id="apellido"
+                    name="apellido"
                     value={formUsuario.apellido}
                     onChange={(e) => setFormUsuario({...formUsuario, apellido: e.target.value})}
                     className="w-full px-3 py-2 bg-[#1f2937] border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition" 
@@ -670,9 +809,11 @@ export const AdminDashboard = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1">Documento de Identidad</label>
+                <label htmlFor="documento" className="block text-sm font-medium text-gray-400 mb-1">Documento de Identidad</label>
                 <input 
                   type="text" 
+                  id="documento"
+                  name="documento"
                   value={formUsuario.documentoIdentidad}
                   onChange={(e) => setFormUsuario({...formUsuario, documentoIdentidad: e.target.value})}
                   className="w-full px-3 py-2 bg-[#1f2937] border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition" 
@@ -680,9 +821,11 @@ export const AdminDashboard = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1">Correo Personal</label>
+                <label htmlFor="correo" className="block text-sm font-medium text-gray-400 mb-1">Correo Personal</label>
                 <input 
                   type="email" 
+                  id="correo"
+                  name="correo"
                   value={formUsuario.correoPersonal}
                   onChange={(e) => setFormUsuario({...formUsuario, correoPersonal: e.target.value})}
                   className="w-full px-3 py-2 bg-[#1f2937] border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition" 
@@ -690,9 +833,11 @@ export const AdminDashboard = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1">Teléfono</label>
+                <label htmlFor="telefono" className="block text-sm font-medium text-gray-400 mb-1">Teléfono</label>
                 <input 
                   type="tel" 
+                  id="telefono"
+                  name="telefono"
                   value={formUsuario.telefono}
                   onChange={(e) => setFormUsuario({...formUsuario, telefono: e.target.value})}
                   className="w-full px-3 py-2 bg-[#1f2937] border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition" 
@@ -700,15 +845,17 @@ export const AdminDashboard = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1">Rol</label>
+                <label htmlFor="rol" className="block text-sm font-medium text-gray-400 mb-1">Rol</label>
                 <select 
+                  id="rol"
+                  name="rol"
                   value={formUsuario.rol}
                   onChange={(e) => setFormUsuario({...formUsuario, rol: e.target.value as 'estudiante' | 'profesor' | 'administrador'})}
                   className="w-full px-3 py-2 bg-[#1f2937] border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
                 >
-                  <option value="estudiante">Estudiante</option>
-                  <option value="profesor">Profesor</option>
-                  <option value="administrador">Administrador</option>
+                  <option key="estudiante" value="estudiante">Estudiante</option>
+                  <option key="profesor" value="profesor">Profesor</option>
+                  <option key="administrador" value="administrador">Administrador</option>
                 </select>
               </div>
               {/* Preview del correo institucional */}
@@ -748,7 +895,7 @@ export const AdminDashboard = () => {
       {/* ========== MODAL: NUEVO CURSO ========== */}
       {modalCurso && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200">
+          <div className="bg-[#374151] rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200 border border-gray-600">
             {/* Header universitario */}
             <div className="bg-linear-to-r from-green-600 to-green-800 px-6 py-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -765,68 +912,248 @@ export const AdminDashboard = () => {
               </button>
             </div>
             {/* Formulario */}
-            <div className="p-6 space-y-4">
+            <form onSubmit={handleCrearCurso} className="p-6 space-y-4">
+              {/* Código y Semestre */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">Código del Curso</label>
-                  <input type="text" placeholder="Ej: MAT101" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition" />
+                  <label htmlFor="codigo-curso" className="block text-sm font-semibold text-gray-200 mb-1">Código del Curso *</label>
+                  <input 
+                    type="text" 
+                    id="codigo-curso"
+                    name="codigo-curso"
+                    list="codigos-existentes"
+                    placeholder="Ej: MAT101" 
+                    value={formData.codigo}
+                    onChange={(e) => setFormData({...formData, codigo: e.target.value})}
+                    className="w-full px-3 py-2 bg-[#1f2937] border border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition text-white placeholder-gray-400" 
+                    required
+                  />
+                  <datalist id="codigos-existentes">
+                    {cursosExistentes.map((curso, index) => (
+                      <option key={`curso-codigo-${curso.id || index}`} value={curso.codigo}>
+                        {curso.nombre}
+                      </option>
+                    ))}
+                  </datalist>
+                  {cursosExistentes.length > 0 && (
+                    <p className="text-xs text-gray-400 mt-1">
+                      {cursosExistentes.length} curso(s) existente(s)
+                    </p>
+                  )}
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">Semestre</label>
-                  <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition bg-white">
-                    <option value="">Seleccionar...</option>
+                  <label htmlFor="semestre" className="block text-sm font-semibold text-gray-200 mb-1">Semestre *</label>
+                  <select 
+                    id="semestre" 
+                    name="semestre" 
+                    value={formData.semestre}
+                    onChange={(e) => setFormData({...formData, semestre: parseInt(e.target.value) || 1})}
+                    className="w-full px-3 py-2 bg-[#1f2937] border border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition text-white"
+                    required
+                  >
+                    <option key="semestre-empty" value="">Seleccionar...</option>
                     {[1,2,3,4,5,6,7,8,9,10].map(s => (
-                      <option key={s} value={s}>Semestre {s}</option>
+                      <option key={`sem-${s}`} value={s}>Semestre {s}</option>
                     ))}
                   </select>
                 </div>
               </div>
+
+              {/* Nombre del Curso */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Nombre del Curso</label>
-                <input type="text" placeholder="Ej: Cálculo Diferencial" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition" />
+                <label htmlFor="nombre-curso" className="block text-sm font-semibold text-gray-200 mb-1">Nombre del Curso *</label>
+                <input 
+                  type="text" 
+                  id="nombre-curso"
+                  name="nombre-curso"
+                  placeholder="Ej: Cálculo Diferencial" 
+                  value={formData.nombre}
+                  onChange={(e) => setFormData({...formData, nombre: e.target.value})}
+                  className="w-full px-3 py-2 bg-[#1f2937] border border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition text-white placeholder-gray-400" 
+                  required
+                />
               </div>
+
+              {/* Descripción */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Carrera</label>
-                <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition bg-white">
-                  <option value="">Seleccionar carrera...</option>
-                  <option value="ingenieria_sistemas">Ingeniería de Sistemas</option>
-                  <option value="ingenieria_civil">Ingeniería Civil</option>
-                  <option value="medicina">Medicina</option>
-                  <option value="enfermeria">Enfermería</option>
-                  <option value="derecho">Derecho</option>
-                  <option value="administracion">Administración de Empresas</option>
-                  <option value="contaduria">Contaduría Pública</option>
-                  <option value="psicologia">Psicología</option>
+                <label htmlFor="descripcion" className="block text-sm font-semibold text-gray-200 mb-1">Descripción</label>
+                <textarea 
+                  id="descripcion"
+                  name="descripcion"
+                  rows={3}
+                  placeholder="Describe el contenido y objetivos del curso..."
+                  value={formData.descripcion}
+                  onChange={(e) => setFormData({...formData, descripcion: e.target.value})}
+                  className="w-full px-3 py-2 bg-[#1f2937] border border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition text-white placeholder-gray-400 resize-none"
+                />
+              </div>
+
+              {/* Profesor Asignado */}
+              <div>
+                <label htmlFor="profesor" className="block text-sm font-semibold text-gray-200 mb-1">Profesor Asignado</label>
+                <select 
+                  id="profesor" 
+                  name="profesor" 
+                  value={formData.profesorId}
+                  onChange={(e) => setFormData({...formData, profesorId: e.target.value})}
+                  className="w-full px-3 py-2 bg-[#1f2937] border border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition text-white"
+                >
+                  <option key="profesor-empty" value="">Seleccionar profesor...</option>
+                  {profesores.length > 0 ? (
+                    profesores.map((prof, index) => (
+                      <option key={`profesor-item-${index}-${prof.id_usuario || 'unknown'}`} value={prof.id_usuario}>
+                        {prof.nombre} {prof.apellido}
+                      </option>
+                    ))
+                  ) : (
+                    <option key="profesor-loading" value="" disabled>Cargando profesores...</option>
+                  )}
                 </select>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+
+              {/* Créditos, Cupos y Nivel */}
+              <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">Créditos</label>
-                  <input type="number" placeholder="Ej: 3" min="1" max="6" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition" />
+                  <label htmlFor="creditos" className="block text-sm font-semibold text-gray-200 mb-1">Créditos *</label>
+                  <input 
+                    type="number" 
+                    id="creditos"
+                    name="creditos"
+                    min={1}
+                    max={6}
+                    placeholder="3"
+                    value={formData.creditos}
+                    onChange={(e) => setFormData({...formData, creditos: parseInt(e.target.value) || 0})}
+                    className="w-full px-3 py-2 bg-[#1f2937] border border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition text-white placeholder-gray-400" 
+                    required
+                  />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">Nivel</label>
-                  <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition bg-white">
-                    <option value="pregrado">Pregrado</option>
-                    <option value="posgrado">Posgrado</option>
-                    <option value="diplomado">Diplomado</option>
+                  <label htmlFor="cupos" className="block text-sm font-semibold text-gray-200 mb-1">Cupos *</label>
+                  <input 
+                    type="number" 
+                    id="cupos"
+                    name="cupos"
+                    min={1}
+                    placeholder="30"
+                    value={formData.cupos}
+                    onChange={(e) => setFormData({...formData, cupos: parseInt(e.target.value) || 0})}
+                    className="w-full px-3 py-2 bg-[#1f2937] border border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition text-white placeholder-gray-400" 
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="nivel" className="block text-sm font-semibold text-gray-200 mb-1">Nivel *</label>
+                  <select 
+                    id="nivel" 
+                    name="nivel" 
+                    value={formData.nivel}
+                    onChange={(e) => setFormData({...formData, nivel: e.target.value as NivelCursoType})}
+                    className="w-full px-3 py-2 bg-[#1f2937] border border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition text-white"
+                    required
+                  >
+                    <option key="nivel-empty" value="">Seleccionar...</option>
+                    <option key="nivel-pregrado" value="pregrado">Pregrado</option>
+                    <option key="nivel-posgrado" value="posgrado">Posgrado</option>
+                    <option key="nivel-diplomado" value="diplomado">Diplomado</option>
                   </select>
                 </div>
               </div>
+
+              {/* Modalidad */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Descripción</label>
-                <textarea rows={3} placeholder="Descripción del curso, objetivos, contenido..." className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition resize-none" />
+                <label className="block text-sm font-semibold text-gray-200 mb-2">Modalidad *</label>
+                <div className="grid grid-cols-3 gap-3">
+                  {['presencial', 'virtual', 'hibrido'].map((mod) => (
+                    <label key={mod} className="cursor-pointer">
+                      <input
+                        type="radio"
+                        name="modalidad"
+                        value={mod}
+                        checked={formData.modalidad === mod}
+                        onChange={(e) => setFormData({...formData, modalidad: e.target.value as ModalidadCursoType})}
+                        className="sr-only"
+                        required
+                      />
+                      <div className={`flex flex-col items-center gap-1 p-3 rounded-lg border-2 transition-all ${
+                        formData.modalidad === mod
+                          ? 'border-green-500 bg-green-500/10 text-green-400'
+                          : 'border-gray-600 bg-[#1f2937] text-gray-400 hover:border-gray-500'
+                      }`}>
+                        <span className="text-xs font-medium capitalize">{mod}</span>
+                      </div>
+                    </label>
+                  ))}
+                </div>
               </div>
+
+              {/* Carrera / Programa */}
+              <div>
+                <label htmlFor="carrera" className="block text-sm font-semibold text-gray-200 mb-1">Carrera / Programa *</label>
+                <select 
+                  id="carrera" 
+                  name="carrera" 
+                  value={formData.carrera}
+                  onChange={(e) => setFormData({...formData, carrera: e.target.value})}
+                  className="w-full px-3 py-2 bg-[#1f2937] border border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition text-white"
+                  required
+                  disabled={cargandoCarreras}
+                >
+                  <option key="empty" value="">
+                    {cargandoCarreras ? 'Cargando carreras...' : 'Seleccionar carrera...'}
+                  </option>
+                  {carreras.map((carrera, index) => (
+                    <option key={`carrera-${carrera.id || index}`} value={carrera.nombre}>
+                      {carrera.nombre}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Horario */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="hora-inicio" className="block text-sm font-semibold text-gray-200 mb-1">Hora Inicio</label>
+                  <input 
+                    type="time" 
+                    id="hora-inicio"
+                    name="hora-inicio"
+                    value={formData.horaInicio}
+                    onChange={(e) => setFormData({...formData, horaInicio: e.target.value})}
+                    className="w-full px-3 py-2 bg-[#1f2937] border border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition text-white"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="hora-fin" className="block text-sm font-semibold text-gray-200 mb-1">Hora Fin</label>
+                  <input 
+                    type="time" 
+                    id="hora-fin"
+                    name="hora-fin"
+                    value={formData.horaFin}
+                    onChange={(e) => setFormData({...formData, horaFin: e.target.value})}
+                    className="w-full px-3 py-2 bg-[#1f2937] border border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition text-white"
+                  />
+                </div>
+              </div>
+
               {/* Botones */}
               <div className="flex gap-3 pt-4">
-                <button onClick={() => setModalCurso(false)} className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-medium">
+                <button 
+                  type="button"
+                  onClick={() => setModalCurso(false)} 
+                  className="flex-1 px-4 py-2 border border-gray-500 text-gray-300 rounded-lg hover:bg-gray-700 transition font-medium"
+                >
                   Cancelar
                 </button>
-                <button className="flex-1 px-4 py-2 bg-linear-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition font-medium shadow-lg shadow-green-200">
-                  Crear Curso
+                <button 
+                  type="submit"
+                  disabled={submitting}
+                  className="flex-1 px-4 py-2 bg-linear-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition font-medium disabled:opacity-50"
+                >
+                  {submitting ? 'Creando...' : 'Crear Curso'}
                 </button>
               </div>
-            </div>
+            </form>
           </div>
         </div>
       )}
@@ -834,7 +1161,7 @@ export const AdminDashboard = () => {
       {/* ========== MODAL: ENVIAR NOTIFICACIÓN ========== */}
       {modalNotificacion && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200">
+          <div className="bg-[#374151] rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200 border border-gray-600">
             {/* Header universitario */}
             <div className="bg-linear-to-r from-purple-600 to-purple-800 px-6 py-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -853,45 +1180,45 @@ export const AdminDashboard = () => {
             {/* Formulario */}
             <div className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Destinatarios</label>
-                <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition bg-white">
-                  <option value="">Seleccionar grupo...</option>
-                  <option value="todos">Todos los usuarios</option>
-                  <option value="estudiantes">Todos los estudiantes</option>
-                  <option value="profesores">Todos los profesores</option>
-                  <option value="carrera">Por carrera específica</option>
-                  <option value="curso">Por curso específico</option>
-                  <option value="individual">Usuario individual</option>
+                <label htmlFor="destinatarios" className="block text-sm font-semibold text-gray-200 mb-1">Destinatarios</label>
+                <select id="destinatarios" name="destinatarios" className="w-full px-3 py-2 bg-[#1f2937] border border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition text-white">
+                  <option key="empty" value="">Seleccionar grupo...</option>
+                  <option key="todos" value="todos">Todos los usuarios</option>
+                  <option key="estudiantes" value="estudiantes">Todos los estudiantes</option>
+                  <option key="profesores" value="profesores">Todos los profesores</option>
+                  <option key="carrera" value="carrera">Por carrera específica</option>
+                  <option key="curso" value="curso">Por curso específico</option>
+                  <option key="individual" value="individual">Usuario individual</option>
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Tipo de Notificación</label>
+                <label className="block text-sm font-semibold text-gray-200 mb-1">Tipo de Notificación</label>
                 <div className="flex gap-2">
                   {['info', 'warning', 'success', 'urgent'].map((tipo) => (
-                    <button key={tipo} className="px-3 py-1.5 text-xs font-medium rounded-full border border-gray-300 hover:bg-purple-50 hover:border-purple-300 transition capitalize">
+                    <button key={tipo} className="px-3 py-1.5 text-xs font-medium rounded-full border border-gray-500 hover:bg-purple-500/20 hover:border-purple-400 transition capitalize text-gray-200">
                       {tipo === 'info' ? 'Informativa' : tipo === 'warning' ? 'Advertencia' : tipo === 'success' ? 'Éxito' : 'Urgente'}
                     </button>
                   ))}
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Asunto</label>
-                <input type="text" placeholder="Ej: Recordatorio de matrícula" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition" />
+                <label htmlFor="asunto" className="block text-sm font-semibold text-gray-200 mb-1">Asunto</label>
+                <input type="text" id="asunto" name="asunto" placeholder="Ej: Recordatorio de matrícula" className="w-full px-3 py-2 bg-[#1f2937] border border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition text-white placeholder-gray-400" />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Mensaje</label>
-                <textarea rows={4} placeholder="Escribe el mensaje de la notificación..." className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition resize-none" />
+                <label htmlFor="mensaje" className="block text-sm font-semibold text-gray-200 mb-1">Mensaje</label>
+                <textarea id="mensaje" name="mensaje" rows={4} placeholder="Escribe el mensaje de la notificación..." className="w-full px-3 py-2 bg-[#1f2937] border border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition resize-none text-white placeholder-gray-400" />
               </div>
               <div className="flex items-center gap-2">
-                <input type="checkbox" id="email" className="w-4 h-4 text-purple-600 rounded border-gray-300 focus:ring-purple-500" />
-                <label htmlFor="email" className="text-sm text-gray-700">Enviar también por correo electrónico</label>
+                <input type="checkbox" id="email" className="w-4 h-4 text-purple-600 rounded border-gray-500 focus:ring-purple-500 bg-[#1f2937]" />
+                <label htmlFor="email" className="text-sm text-gray-300">Enviar también por correo electrónico</label>
               </div>
               {/* Botones */}
               <div className="flex gap-3 pt-4">
-                <button onClick={() => setModalNotificacion(false)} className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-medium">
+                <button onClick={() => setModalNotificacion(false)} className="flex-1 px-4 py-2 border border-gray-500 text-gray-300 rounded-lg hover:bg-gray-700 transition font-medium">
                   Cancelar
                 </button>
-                <button className="flex-1 px-4 py-2 bg-linear-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:from-purple-700 hover:to-purple-800 transition font-medium shadow-lg shadow-purple-200">
+                <button className="flex-1 px-4 py-2 bg-linear-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:from-purple-700 hover:to-purple-800 transition font-medium">
                   Enviar Notificación
                 </button>
               </div>
@@ -903,7 +1230,7 @@ export const AdminDashboard = () => {
       {/* ========== MODAL: GENERAR REPORTE ========== */}
       {modalReporte && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200">
+          <div className="bg-[#374151] rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200 border border-gray-600">
             {/* Header universitario */}
             <div className="bg-linear-to-r from-orange-500 to-orange-700 px-6 py-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -922,49 +1249,49 @@ export const AdminDashboard = () => {
             {/* Formulario */}
             <div className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Tipo de Reporte</label>
+                <label className="block text-sm font-semibold text-gray-200 mb-1">Tipo de Reporte</label>
                 <div className="grid grid-cols-2 gap-2">
                   {[
-                    { id: 'academico', label: 'Académico', icon: '📚' },
-                    { id: 'financiero', label: 'Financiero', icon: '💰' },
-                    { id: 'usuarios', label: 'Usuarios', icon: '👥' },
-                    { id: 'cursos', label: 'Cursos', icon: '🎓' },
+                    { id: 'academico', label: 'Académico', Icon: BookOpen },
+                    { id: 'financiero', label: 'Financiero', Icon: DollarSign },
+                    { id: 'usuarios', label: 'Usuarios', Icon: Users },
+                    { id: 'cursos', label: 'Cursos', Icon: Library },
                   ].map((tipo) => (
-                    <button key={tipo.id} className="p-3 border border-gray-200 rounded-lg hover:border-orange-400 hover:bg-orange-50 transition text-left">
-                      <span className="text-xl mr-2">{tipo.icon}</span>
-                      <span className="text-sm font-medium text-gray-700">{tipo.label}</span>
+                    <button key={tipo.id} className="p-3 border border-gray-500 rounded-lg hover:border-orange-400 hover:bg-gray-700 transition text-left bg-[#1f2937] flex items-center gap-3">
+                      <tipo.Icon className="w-5 h-5 text-orange-400" />
+                      <span className="text-sm font-medium text-gray-200">{tipo.label}</span>
                     </button>
                   ))}
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Título del Reporte</label>
-                <input type="text" placeholder="Ej: Reporte de matrícula 2025-I" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition" />
+                <label htmlFor="titulo-reporte" className="block text-sm font-semibold text-gray-200 mb-1">Título del Reporte</label>
+                <input type="text" id="titulo-reporte" name="titulo-reporte" placeholder="Ej: Reporte de matrícula 2025-I" className="w-full px-3 py-2 bg-[#1f2937] border border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition text-white placeholder-gray-400" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">Fecha Inicio</label>
-                  <input type="date" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition" />
+                  <label htmlFor="fecha-inicio" className="block text-sm font-semibold text-gray-200 mb-1">Fecha Inicio</label>
+                  <input type="date" id="fecha-inicio" name="fecha-inicio" className="w-full px-3 py-2 bg-[#1f2937] border border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition text-white" />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">Fecha Fin</label>
-                  <input type="date" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition" />
+                  <label htmlFor="fecha-fin" className="block text-sm font-semibold text-gray-200 mb-1">Fecha Fin</label>
+                  <input type="date" id="fecha-fin" name="fecha-fin" className="w-full px-3 py-2 bg-[#1f2937] border border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition text-white" />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Descripción / Notas</label>
-                <textarea rows={2} placeholder="Notas adicionales sobre el reporte..." className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition resize-none" />
+                <label htmlFor="descripcion" className="block text-sm font-semibold text-gray-200 mb-1">Descripción / Notas</label>
+                <textarea id="descripcion" name="descripcion" rows={2} placeholder="Notas adicionales sobre el reporte..." className="w-full px-3 py-2 bg-[#1f2937] border border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition resize-none text-white placeholder-gray-400" />
               </div>
               <div className="flex items-center gap-2">
-                <input type="checkbox" id="export" className="w-4 h-4 text-orange-600 rounded border-gray-300 focus:ring-orange-500" />
-                <label htmlFor="export" className="text-sm text-gray-700">Exportar automáticamente a Excel/PDF</label>
+                <input type="checkbox" id="export" className="w-4 h-4 text-orange-600 rounded border-gray-500 focus:ring-orange-500 bg-[#1f2937]" />
+                <label htmlFor="export" className="text-sm text-gray-300">Exportar automáticamente a Excel/PDF</label>
               </div>
               {/* Botones */}
               <div className="flex gap-3 pt-4">
-                <button onClick={() => setModalReporte(false)} className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-medium">
+                <button onClick={() => setModalReporte(false)} className="flex-1 px-4 py-2 border border-gray-500 text-gray-300 rounded-lg hover:bg-gray-700 transition font-medium">
                   Cancelar
                 </button>
-                <button className="flex-1 px-4 py-2 bg-linear-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 transition font-medium shadow-lg shadow-orange-200">
+                <button className="flex-1 px-4 py-2 bg-linear-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 transition font-medium shadow-none">
                   Generar Reporte
                 </button>
               </div>

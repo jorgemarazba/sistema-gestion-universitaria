@@ -59,6 +59,7 @@ export class AuthService {
 
     return {
       user: {
+        id: usuario.id_usuario,
         nombre: usuario.nombre,
         rol: usuario.rol,
         email: usuario.correoInstitucional,

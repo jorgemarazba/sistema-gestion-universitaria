@@ -10,6 +10,7 @@ import { TicketsModule } from './common/tickets/tickets.module';
 import { PagosModule } from './common/pagos/pagos.module';
 import { CursosModule } from './common/cursos/cursos.module';
 import { ProgramasModule } from './common/programas/programas.module';
+import { PresenceModule } from './common/presence/presence.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { ProgramasModule } from './common/programas/programas.module';
     PagosModule,
     CursosModule,
     ProgramasModule,
+    PresenceModule,
   ],
   controllers: [AppController],
   providers: [AppService],

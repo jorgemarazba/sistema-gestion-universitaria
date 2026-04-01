@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { BookOpen, Eye, Edit2, Trash2, Search, Plus, Download, Monitor, Video, Users, X, AlertTriangle, CheckCircle, Loader2 } from 'lucide-react';
+import { BookOpen, Eye, Edit2, Trash2, Search, Monitor, Video, Users, X, AlertTriangle, CheckCircle, Loader2 } from 'lucide-react';
 import { CursosService } from '../../services/cursos.service';
 import { UsuariosService } from '../../services/usuarios.service';
 import type { Curso, CreateCursoData, UpdateCursoData } from '../../types/curso.types';
 import { ModalidadCurso, NivelCurso } from '../../types/curso.types';
+import type { Usuario } from '../../services/usuarios.service';
 
 type ModalType = 'create' | 'edit' | 'view' | 'delete' | null;
 
@@ -22,7 +23,7 @@ export const AdminCursos = () => {
   const [modalType, setModalType] = useState<ModalType>(null);
   const [cursoSeleccionado, setCursoSeleccionado] = useState<Curso | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [profesores, setProfesores] = useState<Array<{id: string, nombre: string, apellido: string, email: string}>>([]);
+  const [profesores, setProfesores] = useState<Usuario[]>([]);
   const [cargandoProfesores, setCargandoProfesores] = useState(false);
 
   // Formulario
@@ -53,11 +54,12 @@ export const AdminCursos = () => {
       setError(null);
       const modalidad = filtroModalidad === 'todos' ? undefined : filtroModalidad;
       const data = await CursosService.getAll(undefined, undefined, modalidad);
+      console.log('Cursos recibidos:', data);
       setCursos(Array.isArray(data) ? data : []);
     } catch (err) {
       setError('Error al cargar los cursos');
       setCursos([]);
-      console.error(err);
+      console.error('Error cargando cursos:', err);
     } finally {
       setLoading(false);
     }
@@ -67,7 +69,7 @@ export const AdminCursos = () => {
     try {
       setCargandoProfesores(true);
       const response = await UsuariosService.getAll();
-      const usuarios = Array.isArray(response) ? response : response.data || [];
+      const usuarios = Array.isArray(response) ? response : [];
       
       // Filtrar solo profesores con correo institucional
       const dominiosInstitucionales = ['@universidad.edu', '@institucion.edu', '@edu.co', '@uni.edu'];
@@ -264,24 +266,9 @@ export const AdminCursos = () => {
       )}
 
       {/* Header */}
-      <div className="flex justify-between items-start mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-white">Gestión de Cursos</h1>
-          <p className="text-sm mt-1 font-medium text-gray-300">Administra los cursos del sistema</p>
-        </div>
-        <div className="flex gap-3">
-          <button className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-slate-700 hover:bg-slate-50 transition">
-            <Download size={18} />
-            <span>Exportar</span>
-          </button>
-          <button 
-            onClick={() => openModal('create')}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-          >
-            <Plus size={18} />
-            <span>Nuevo Curso</span>
-          </button>
-        </div>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-white">Gestión de Cursos</h1>
+        <p className="text-sm mt-1 font-medium text-gray-400">Administra los cursos del sistema</p>
       </div>
 
       {/* Búsqueda y Filtros */}
@@ -290,6 +277,8 @@ export const AdminCursos = () => {
           <div className="relative flex-1 w-full">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={20} />
             <input
+              id="busqueda"
+              name="busqueda"
               type="text"
               placeholder="Buscar por nombre, código o carrera..."
               value={busqueda}
@@ -316,11 +305,14 @@ export const AdminCursos = () => {
       </div>
 
       {/* Lista de Cursos */}
-      <div className="bg-[#374151] rounded-xl shadow-lg border border-gray-600 overflow-hidden">
-        <div className="px-6 py-4 border-b border-slate-200">
+      <div className="bg-[#1f2937] rounded-xl shadow-lg border border-gray-700 overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-700 flex justify-between items-center">
           <h2 className="text-lg font-bold flex items-center gap-2 text-white">
-            <BookOpen size={20} />
-            Lista de Cursos ({cursosFiltrados.length})
+            <BookOpen size={20} className="text-blue-400" />
+            Lista de Cursos
+            <span className="px-2.5 py-0.5 bg-gray-700 text-gray-300 text-sm rounded-full">
+              {cursosFiltrados.length}
+            </span>
           </h2>
         </div>
 
@@ -348,70 +340,86 @@ export const AdminCursos = () => {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="bg-slate-800 border-b border-gray-600">
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-300">Código</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-300">Curso</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-300">Carrera</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-300">Nivel</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-300">Créditos</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-300">Cupos</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-300">Modalidad</th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-slate-400 uppercase tracking-wider">
-                    Acciones
-                  </th>
+                <tr className="bg-gray-800/50 border-b border-gray-700">
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">Código</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">Curso</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">Carrera</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-gray-400">Nivel</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-gray-400">Créditos</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-gray-400">Cupos</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-gray-400">Modalidad</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-gray-400">Acciones</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-600">
+              <tbody className="divide-y divide-gray-700">
                 {cursosFiltrados.map((curso) => (
-                  <tr key={curso.id} className="hover:bg-slate-800 transition">
-                    <td className="px-6 py-4 text-sm font-medium text-white">{curso.codigo}</td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 bg-slate-700 rounded flex items-center justify-center">
-                          <BookOpen size={16} className="text-blue-400" />
+                  <tr key={curso.id} className="hover:bg-gray-800/50 transition-colors">
+                    <td className="px-4 py-3">
+                      <code className="text-xs font-mono bg-gray-800 px-2 py-1 rounded text-blue-300">
+                        {curso.codigo}
+                      </code>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 bg-linear-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg">
+                          <BookOpen size={16} className="text-white" />
                         </div>
-                        <span className="text-sm font-semibold text-white">{curso.nombre}</span>
+                        <span className="text-sm font-medium text-white">{curso.nombre}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-white">{curso.carrera}</td>
-                    <td className="px-6 py-4 text-sm text-white">{getNivelLabel(curso.nivel)}</td>
-                    <td className="px-6 py-4 text-sm text-white">{curso.creditos} cr</td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                          (curso.cupos || 0) === 0 ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
-                        }`}
-                      >
-                        {curso.cupos || 0} cupos
+                    <td className="px-4 py-3 text-sm text-gray-300 max-w-[150px] truncate" title={curso.carrera}>
+                      {curso.carrera}
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-gray-700 text-gray-300">
+                        {getNivelLabel(curso.nivel)}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getModalidadStyle(
-                          curso.modalidad
-                        )}`}
-                      >
-                        {getModalidadIcon(curso.modalidad)}
+                    <td className="px-4 py-3 text-center">
+                      <span className="text-sm font-semibold text-white">{curso.creditos}</span>
+                      <span className="text-xs text-gray-500 ml-0.5">cr</span>
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <span className={`px-2.5 py-1 text-xs font-semibold rounded-full ${
+                        (curso.cupos || 0) === 0 
+                          ? 'bg-red-500/20 text-red-400 border border-red-500/30' 
+                          : 'bg-green-500/20 text-green-400 border border-green-500/30'
+                      }`}>
+                        {curso.cupos || 0}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${
+                        curso.modalidad === 'presencial' ? 'bg-blue-500/10 text-blue-400 border-blue-500/30' :
+                        curso.modalidad === 'virtual' ? 'bg-purple-500/10 text-purple-400 border-purple-500/30' :
+                        'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                      }`}>
+                        {curso.modalidad === 'presencial' && <Users size={12} />}
+                        {curso.modalidad === 'virtual' && <Video size={12} />}
+                        {curso.modalidad === 'hibrido' && <Monitor size={12} />}
                         {getModalidadLabel(curso.modalidad)}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="flex justify-center gap-2">
+                    <td className="px-4 py-3">
+                      <div className="flex justify-center gap-1">
                         <button 
                           onClick={() => openModal('view', curso)}
-                          className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded transition"
+                          className="p-2 text-gray-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-all"
+                          title="Ver detalles"
                         >
                           <Eye size={16} />
                         </button>
                         <button 
                           onClick={() => openModal('edit', curso)}
-                          className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded transition"
+                          className="p-2 text-gray-400 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-all"
+                          title="Editar"
                         >
                           <Edit2 size={16} />
                         </button>
                         <button 
                           onClick={() => openModal('delete', curso)}
-                          className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded transition"
+                          className="p-2 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
+                          title="Eliminar"
                         >
                           <Trash2 size={16} />
                         </button>
@@ -427,216 +435,140 @@ export const AdminCursos = () => {
 
       {/* Modal */}
       {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto border border-slate-200/50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full max-h-[85vh] overflow-y-auto">
             {/* Modal Header */}
-            <div className="flex justify-between items-center px-6 py-4 bg-linear-to-r from-blue-600 to-indigo-600 text-white rounded-t-2xl">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-white/20 rounded-lg">
-                  <BookOpen size={20} />
-                </div>
-                <h3 className="text-xl font-bold">
+            <div className="flex justify-between items-center px-5 py-3 bg-linear-to-r from-blue-600 to-indigo-600 text-white rounded-t-xl">
+              <div className="flex items-center gap-2">
+                <BookOpen size={18} />
+                <h3 className="text-lg font-bold">
                   {modalType === 'create' && 'Nuevo Curso'}
                   {modalType === 'edit' && 'Editar Curso'}
-                  {modalType === 'view' && 'Detalles del Curso'}
-                  {modalType === 'delete' && 'Eliminar Curso'}
+                  {modalType === 'view' && 'Detalles'}
+                  {modalType === 'delete' && 'Eliminar'}
                 </h3>
               </div>
-              <button onClick={closeModal} className="p-2 hover:bg-white/20 rounded-lg transition">
-                <X size={20} />
+              <button onClick={closeModal} className="p-1.5 hover:bg-white/20 rounded-lg transition">
+                <X size={18} />
               </button>
             </div>
 
             {/* Modal Content */}
-            <div className="p-6">
+            <div className="p-4">
               {(modalType === 'create' || modalType === 'edit') && (
-                <form onSubmit={modalType === 'create' ? handleCreate : handleUpdate} className="space-y-5">
-                  {/* Sección: Información Básica */}
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-2 text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                      <div className="w-1 h-4 bg-blue-500 rounded-full"></div>
-                      Información Básica
+                <form onSubmit={modalType === 'create' ? handleCreate : handleUpdate} className="space-y-3">
+                  {/* Código y Nombre */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Código</label>
+                      <input
+                        type="text"
+                        value={formData.codigo}
+                        onChange={(e) => setFormData({...formData, codigo: e.target.value})}
+                        className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="MAT-101"
+                        required
+                      />
                     </div>
-                    
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-1.5">
-                        <label className="block text-sm font-medium text-gray-700">Código del Curso</label>
-                        <input
-                          id="codigo"
-                          name="codigo"
-                          type="text"
-                          placeholder="Ej: MAT-101"
-                          value={formData.codigo}
-                          onChange={(e) => setFormData({...formData, codigo: e.target.value})}
-                          className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-gray-400"
-                          required
-                        />
-                      </div>
-                      <div className="space-y-1.5">
-                        <label className="block text-sm font-medium text-gray-700">Nombre del Curso</label>
-                        <input
-                          id="nombre"
-                          name="nombre"
-                          type="text"
-                          placeholder="Ej: Cálculo Diferencial"
-                          value={formData.nombre}
-                          onChange={(e) => setFormData({...formData, nombre: e.target.value})}
-                          className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-gray-400"
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <label className="block text-sm font-medium text-gray-700">Descripción</label>
-                      <textarea
-                        id="descripcion"
-                        name="descripcion"
-                        placeholder="Describe el contenido y objetivos del curso..."
-                        value={formData.descripcion}
-                        onChange={(e) => setFormData({...formData, descripcion: e.target.value})}
-                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-gray-400 resize-none"
-                        rows={3}
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Nombre</label>
+                      <input
+                        type="text"
+                        value={formData.nombre}
+                        onChange={(e) => setFormData({...formData, nombre: e.target.value})}
+                        className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Cálculo Diferencial"
+                        required
                       />
                     </div>
                   </div>
 
-                  {/* Sección: Clasificación */}
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-2 text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                      <div className="w-1 h-4 bg-indigo-500 rounded-full"></div>
-                      Clasificación
-                    </div>
-                    
-                    <div className="space-y-4">
-                      
-                      {/* Selector de Profesor */}
-                      <div className="space-y-1.5">
-                        <label className="block text-sm font-medium text-gray-700">
-                          <span className="flex items-center gap-2">
-                            <Users size={16} className="text-indigo-500" />
-                            Profesor Asignado
-                          </span>
-                        </label>
-                        <div className="relative">
-                          <select
-                            id="profesorId"
-                            name="profesorId"
-                            value={formData.profesorId || ''}
-                            onChange={(e) => setFormData({...formData, profesorId: e.target.value})}
-                            className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all appearance-none cursor-pointer"
-                            disabled={cargandoProfesores}
-                          >
-                            <option value="">
-                              {cargandoProfesores ? 'Cargando profesores...' : 'Seleccionar profesor...'}
-                            </option>
-                            {profesores.map((prof) => (
-                              <option key={prof.id} value={prof.id}>
-                                {prof.nombre} {prof.apellido} - {prof.email}
-                              </option>
-                            ))}
-                          </select>
-                          <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-                            {cargandoProfesores ? (
-                              <Loader2 size={18} className="animate-spin" />
-                            ) : (
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                              </svg>
-                            )}
-                          </div>
-                        </div>
-                        <p className="text-xs text-gray-500">
-                          Solo se muestran profesores con correo institucional
-                        </p>
-                      </div>
+                  {/* Descripción */}
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Descripción</label>
+                    <textarea
+                      value={formData.descripcion}
+                      onChange={(e) => setFormData({...formData, descripcion: e.target.value})}
+                      className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                      rows={2}
+                      placeholder="Descripción del curso..."
+                    />
+                  </div>
 
-                      <div className="space-y-1.5">
-                        <label className="block text-sm font-medium text-gray-700">Nivel Académico</label>
-                        <div className="relative">
-                          <select
-                            id="nivel"
-                            name="nivel"
-                            value={formData.nivel}
-                            onChange={(e) => setFormData({...formData, nivel: e.target.value as typeof NivelCurso.PREGRADO})}
-                            className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all appearance-none cursor-pointer"
-                          >
-                            <option value={NivelCurso.PREGRADO}>Pregrado</option>
-                            <option value={NivelCurso.POSGRADO}>Posgrado</option>
-                            <option value={NivelCurso.DIPLOMADO}>Diplomado</option>
-                          </select>
-                          <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                            </svg>
-                          </div>
-                        </div>
-                      </div>
+                  {/* Profesor y Nivel */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Profesor</label>
+                      <select
+                        value={formData.profesorId || ''}
+                        onChange={(e) => setFormData({...formData, profesorId: e.target.value})}
+                        className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        disabled={cargandoProfesores}
+                      >
+                        <option value="">Seleccionar...</option>
+                        {profesores.map((prof) => (
+                          <option key={prof.id_usuario} value={prof.id_usuario}>
+                            {prof.nombre} {prof.apellido}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Nivel</label>
+                      <select
+                        value={formData.nivel}
+                        onChange={(e) => setFormData({...formData, nivel: e.target.value as typeof NivelCurso.PREGRADO})}
+                        className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      >
+                        <option value={NivelCurso.PREGRADO}>Pregrado</option>
+                        <option value={NivelCurso.POSGRADO}>Posgrado</option>
+                        <option value={NivelCurso.DIPLOMADO}>Diplomado</option>
+                      </select>
                     </div>
                   </div>
 
-                  {/* Sección: Detalles Académicos */}
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-2 text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                      <div className="w-1 h-4 bg-green-500 rounded-full"></div>
-                      Detalles Académicos
+                  {/* Créditos, Semestre, Cupos */}
+                  <div className="grid grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Créditos</label>
+                      <input
+                        type="number"
+                        min={1}
+                        max={10}
+                        value={formData.creditos}
+                        onChange={(e) => setFormData({...formData, creditos: parseInt(e.target.value)})}
+                        className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-center focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
                     </div>
-                    
-                    <div className="grid grid-cols-3 gap-4">
-                      <div className="space-y-1.5">
-                        <label className="block text-sm font-medium text-gray-700">Créditos</label>
-                        <input
-                          id="creditos"
-                          name="creditos"
-                          type="number"
-                          min={1}
-                          max={10}
-                          value={formData.creditos}
-                          onChange={(e) => setFormData({...formData, creditos: parseInt(e.target.value)})}
-                          className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-center"
-                        />
-                      </div>
-                      <div className="space-y-1.5">
-                        <label className="block text-sm font-medium text-gray-700">Semestre</label>
-                        <input
-                          id="semestre"
-                          name="semestre"
-                          type="number"
-                          min={1}
-                          max={12}
-                          value={formData.semestre}
-                          onChange={(e) => setFormData({...formData, semestre: parseInt(e.target.value)})}
-                          className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-center"
-                        />
-                      </div>
-                      <div className="space-y-1.5">
-                        <label className="block text-sm font-medium text-gray-700">Cupos</label>
-                        <input
-                          id="cupos"
-                          name="cupos"
-                          type="number"
-                          min={0}
-                          value={formData.cupos}
-                          onChange={(e) => setFormData({...formData, cupos: parseInt(e.target.value)})}
-                          className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-center"
-                        />
-                      </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Semestre</label>
+                      <input
+                        type="number"
+                        min={1}
+                        max={12}
+                        value={formData.semestre}
+                        onChange={(e) => setFormData({...formData, semestre: parseInt(e.target.value)})}
+                        className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-center focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Cupos</label>
+                      <input
+                        type="number"
+                        min={0}
+                        value={formData.cupos}
+                        onChange={(e) => setFormData({...formData, cupos: parseInt(e.target.value)})}
+                        className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-center focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
                     </div>
                   </div>
 
-                  {/* Sección: Modalidad */}
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-2 text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                      <div className="w-1 h-4 bg-purple-500 rounded-full"></div>
-                      Modalidad
-                    </div>
-                    
-                    <div className="flex gap-3">
+                  {/* Modalidad */}
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Modalidad</label>
+                    <div className="flex gap-2">
                       {Object.values(ModalidadCurso).map((mod) => (
-                        <label
-                          key={mod}
-                          className={`flex-1 cursor-pointer group`}
-                        >
+                        <label key={mod} className="flex-1 cursor-pointer">
                           <input
                             type="radio"
                             name="modalidad"
@@ -645,41 +577,37 @@ export const AdminCursos = () => {
                             onChange={(e) => setFormData({...formData, modalidad: e.target.value as typeof ModalidadCurso.PRESENCIAL})}
                             className="sr-only"
                           />
-                          <div className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all duration-200 ${
+                          <div className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium border transition-all ${
                             formData.modalidad === mod
                               ? 'border-blue-500 bg-blue-50 text-blue-700'
-                              : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50'
+                              : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
                           }`}>
-                            <div className={`p-2 rounded-lg ${
-                              formData.modalidad === mod ? 'bg-blue-100' : 'bg-gray-100'
-                            }`}>
-                              {mod === 'presencial' && <Users size={20} />}
-                              {mod === 'virtual' && <Video size={20} />}
-                              {mod === 'hibrido' && <Monitor size={20} />}
-                            </div>
-                            <span className="text-sm font-medium capitalize">{getModalidadLabel(mod)}</span>
+                            {mod === 'presencial' && <Users size={14} />}
+                            {mod === 'virtual' && <Video size={14} />}
+                            {mod === 'hibrido' && <Monitor size={14} />}
+                            {getModalidadLabel(mod)}
                           </div>
                         </label>
                       ))}
                     </div>
                   </div>
 
-                  {/* Botones de Acción */}
-                  <div className="flex justify-end gap-3 pt-6 border-t border-gray-100">
+                  {/* Botones */}
+                  <div className="flex justify-end gap-2 pt-3 border-t border-gray-100">
                     <button
                       type="button"
                       onClick={closeModal}
-                      className="px-6 py-2.5 text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 hover:border-gray-400 transition-all font-medium"
+                      className="px-4 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 font-medium"
                     >
                       Cancelar
                     </button>
                     <button
                       type="submit"
                       disabled={submitting}
-                      className="px-6 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-medium flex items-center gap-2 shadow-lg shadow-blue-500/25"
+                      className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 font-medium flex items-center gap-1.5"
                     >
-                      {submitting && <Loader2 size={18} className="animate-spin" />}
-                      {modalType === 'create' ? 'Crear Curso' : 'Guardar Cambios'}
+                      {submitting && <Loader2 size={14} className="animate-spin" />}
+                      {modalType === 'create' ? 'Crear' : 'Guardar'}
                     </button>
                   </div>
                 </form>
