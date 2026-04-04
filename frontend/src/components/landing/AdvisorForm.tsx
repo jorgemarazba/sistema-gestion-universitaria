@@ -3,6 +3,7 @@ import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { COUNTRIES } from '../../data/countries'
+import { useToast } from '../../hooks/useToast'
 
 const schema = z.object({
   nombres: z.string().min(2, 'Requerido'),
@@ -13,9 +14,14 @@ const schema = z.object({
   ciudad: z.string().min(2, 'Requerido'),
   modalidad: z.enum(['presencial', 'virtual', 'hibrida']),
   programa: z.string().min(1, 'Selecciona un programa'),
+  aceptaTerminos: z.boolean().refine((val) => val === true, {
+    message: 'Debes aceptar los términos para continuar',
+  }),
 })
 
 type FormValues = z.infer<typeof schema>
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3003/api/v1'
 
 const programas = [
   'Ingeniería de Sistemas',
@@ -28,6 +34,7 @@ const programas = [
 ]
 
 export function AdvisorForm() {
+  const { showToast, ToastContainer } = useToast()
   const defaultCountry = useMemo(
     () => COUNTRIES.find((c) => c.code === 'CO') ?? COUNTRIES[0],
     [],
@@ -37,7 +44,7 @@ export function AdvisorForm() {
     register,
     handleSubmit,
     control,
-    formState: { errors },
+    formState: { errors, isSubmitting },
     reset,
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -45,6 +52,7 @@ export function AdvisorForm() {
       paisCodigo: defaultCountry.code,
       modalidad: 'presencial',
       programa: '',
+      aceptaTerminos: false,
     },
   })
 
@@ -54,18 +62,41 @@ export function AdvisorForm() {
     [paisCodigo, defaultCountry],
   )
 
-  const onSubmit = (data: FormValues) => {
-    console.log('Asesoría:', data, 'Indicativo:', selected.dial)
-    alert(
-      `Solicitud enviada (demo). ${data.nombres} ${data.apellidos} — ${selected.dial} ${data.telefono}`,
-    )
-    reset()
+  const onSubmit = async (data: FormValues) => {
+    try {
+      const response = await fetch(`${API_URL}/asesoramiento`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          nombres: data.nombres,
+          apellidos: data.apellidos,
+          email: data.email,
+          telefono: `${selected.dial} ${data.telefono}`,
+          pais: selected.name,
+          ciudad: data.ciudad,
+          modalidad: data.modalidad,
+          programa: data.programa,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Error al enviar la solicitud')
+      }
+
+      showToast('Solicitud enviada exitosamente. Un coordinador académico se pondrá en contacto contigo pronto.', 'success')
+      reset()
+    } catch (error) {
+      console.error('Error:', error)
+      showToast('Hubo un error al enviar la solicitud. Por favor intenta de nuevo.', 'error')
+    }
   }
 
   return (
     <section className="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8">
       <h2 className="mb-2 text-center text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
-        Quiero ser asesorado por un profesor
+        Quiero ser asesorado
       </h2>
       <p className="mb-10 text-center text-slate-600 dark:text-slate-400">
         Completa el formulario y un coordinador académico te contactará.
@@ -213,13 +244,30 @@ export function AdvisorForm() {
           )}
         </div>
 
+        <div className="flex items-start gap-3">
+          <input
+            type="checkbox"
+            id="aceptaTerminos"
+            {...register('aceptaTerminos')}
+            className="mt-1 h-4 w-4 rounded border-slate-300 text-violet-600 focus:ring-violet-500"
+          />
+          <label htmlFor="aceptaTerminos" className="text-sm text-slate-600 dark:text-slate-400">
+            Acepto las políticas de la aplicación y autorizo envío de mis datos
+          </label>
+        </div>
+        {errors.aceptaTerminos && (
+          <p className="text-xs text-red-600">{errors.aceptaTerminos.message}</p>
+        )}
+
         <button
           type="submit"
-          className="w-full rounded-xl bg-violet-600 py-3 font-semibold text-white transition hover:bg-violet-700"
+          disabled={isSubmitting}
+          className="w-full rounded-xl bg-violet-600 py-3 font-semibold text-white transition hover:bg-violet-700 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Enviar
+          {isSubmitting ? 'Enviando...' : 'Enviar'}
         </button>
       </form>
+      <ToastContainer />
     </section>
   )
 }

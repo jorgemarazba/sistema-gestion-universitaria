@@ -17,10 +17,12 @@ export function LogoBar() {
           className="flex flex-col items-center gap-2 text-center sm:items-start sm:text-left"
         >
           <div className="flex items-center gap-3">
-            <BrandMark size="lg" />
+            <div className="w-20 h-20 rounded-lg overflow-hidden shrink-0">
+              <img src="/icono.png" alt="Academic Manager" className="w-full h-full object-cover" />
+            </div>
             <div>
               <p className="text-lg font-semibold tracking-tight text-white">
-                Sistema Gestión Universitaria
+                Academic Manager
               </p>
               <p className="text-sm text-slate-400">
                 Plataforma integral para tu vida académica
@@ -42,7 +44,7 @@ export function LogoBar() {
             <button
               type="button"
               onClick={() => setInfoOpen((v) => !v)}
-              className="inline-flex items-center gap-2 rounded-xl border border-violet-500/50 bg-violet-950/40 px-4 py-2 text-sm font-medium text-violet-200 transition hover:bg-violet-900/50"
+              className="inline-flex items-center gap-2 rounded-xl border border-yellow-500/50 bg-yellow-950/40 px-4 py-2 text-sm font-medium text-yellow-200 transition hover:bg-yellow-900/50"
             >
               <Info className="size-4" />
               Información

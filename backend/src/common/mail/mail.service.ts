@@ -347,9 +347,83 @@ export class MailService {
     `;
   }
 
+  async enviarNotificacionConAdjuntos(
+    correo: string,
+    titulo: string,
+    mensaje: string,
+    archivos: { nombre: string; url: string; tipo: string }[],
+  ) {
+    const asunto = `📢 ${titulo}`;
+    const contenidoHtml = this.generarTemplateNotificacion(titulo, mensaje);
+
+    // Preparar adjuntos para nodemailer
+    const attachments = archivos.map((archivo) => ({
+      filename: archivo.nombre,
+      path: archivo.url.startsWith('http') ? archivo.url : `.${archivo.url}`,
+    }));
+
+    console.log(`📤 [MailService] Preparando envío con ${attachments.length} adjuntos:`);
+    console.log(`   - Destinatario (to): ${correo}`);
+    console.log(`   - From: ${process.env.GMAIL_USER}`);
+    console.log(`   - Adjuntos:`, attachments.map((a) => a.filename).join(', '));
+
+    try {
+      const info = await this.transporter.sendMail({
+        from: `"Sistema de Gestión Universitaria" <${process.env.GMAIL_USER}>`,
+        to: correo,
+        subject: asunto,
+        html: contenidoHtml,
+        attachments: attachments,
+      });
+
+      console.log('✅ Email con adjuntos enviado:', info.messageId);
+      console.log(`   - Enviado a: ${info.envelope?.to?.join(', ') || correo}`);
+      return { success: true, messageId: info.messageId };
+    } catch (error) {
+      console.error('❌ Error al enviar email con adjuntos:', error);
+      throw new Error(`Error enviando email: ${error.message}`);
+    }
+  }
+
   /**
-   * Enviar notificación general
+   * Enviar email con HTML directo (sin template wrapper)
    */
+  async enviarEmailHtmlDirecto(
+    correo: string,
+    asunto: string,
+    htmlContent: string,
+    archivos?: { nombre: string; url: string; tipo: string }[],
+  ) {
+    if (!this.isConfigValid || !this.transporter) {
+      throw new Error('Configuración de email incompleta. Verifica GMAIL_USER y GMAIL_APP_PASSWORD en .env');
+    }
+
+    const attachments = archivos?.map((archivo) => ({
+      filename: archivo.nombre,
+      path: archivo.url.startsWith('http') ? archivo.url : `.${archivo.url}`,
+    })) || [];
+
+    console.log(`📤 [MailService] Enviando email HTML directo:`);
+    console.log(`   - Destinatario: ${correo}`);
+    console.log(`   - Asunto: ${asunto}`);
+    console.log(`   - Adjuntos: ${attachments.length}`);
+
+    try {
+      const info = await this.transporter.sendMail({
+        from: `"Sistema de Gestión Universitaria" <${process.env.GMAIL_USER}>`,
+        to: correo,
+        subject: asunto,
+        html: htmlContent,
+        attachments: attachments.length > 0 ? attachments : undefined,
+      });
+
+      console.log('✅ Email enviado:', info.messageId);
+      return { success: true, messageId: info.messageId };
+    } catch (error) {
+      console.error('❌ Error al enviar email:', error);
+      throw new Error(`Error enviando email: ${error.message}`);
+    }
+  }
   async enviarNotificacion(
     correo: string,
     titulo: string,

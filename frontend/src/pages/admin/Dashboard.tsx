@@ -222,6 +222,17 @@ export const AdminDashboard = () => {
   });
   const [enviandoNotificacion, setEnviandoNotificacion] = useState(false);
 
+  // Estado para formulario de reporte
+  const [formReporte, setFormReporte] = useState({
+    tipo: 'academico' as 'academico' | 'financiero' | 'usuarios' | 'cursos',
+    titulo: '',
+    fechaInicio: '',
+    fechaFin: '',
+    descripcion: '',
+    exportar: false,
+  });
+  const [generandoReporte, setGenerandoReporte] = useState(false);
+
   // Función para enviar notificación
   const handleEnviarNotificacion = async () => {
     try {
@@ -255,6 +266,40 @@ export const AdminDashboard = () => {
       addToast('error', 'Error', err.response?.data?.message || 'Hubo un problema al enviar la notificación.');
     } finally {
       setEnviandoNotificacion(false);
+    }
+  };
+
+  // Función para generar reporte
+  const handleGenerarReporte = async () => {
+    try {
+      setGenerandoReporte(true);
+      
+      const response = await axios.post(`${API_URL}/reportes/generar`, {
+        tipo: formReporte.tipo,
+        titulo: formReporte.titulo,
+        fechaInicio: formReporte.fechaInicio,
+        fechaFin: formReporte.fechaFin,
+        descripcion: formReporte.descripcion,
+        exportar: formReporte.exportar,
+      });
+      
+      addToast('success', 'Reporte Generado', `El reporte "${formReporte.titulo}" se ha generado exitosamente.`);
+      
+      // Limpiar formulario y cerrar modal
+      setFormReporte({
+        tipo: 'academico',
+        titulo: '',
+        fechaInicio: '',
+        fechaFin: '',
+        descripcion: '',
+        exportar: false,
+      });
+      setModalReporte(false);
+    } catch (err: any) {
+      console.error('Error al generar reporte:', err);
+      addToast('error', 'Error', err.response?.data?.message || 'Hubo un problema al generar el reporte.');
+    } finally {
+      setGenerandoReporte(false);
     }
   };
 
@@ -1352,7 +1397,15 @@ export const AdminDashboard = () => {
                     { id: 'usuarios', label: 'Usuarios', Icon: Users },
                     { id: 'cursos', label: 'Cursos', Icon: Library },
                   ].map((tipo) => (
-                    <button key={tipo.id} className="p-3 border border-gray-500 rounded-lg hover:border-orange-400 hover:bg-gray-700 transition text-left bg-[#1f2937] flex items-center gap-3">
+                    <button 
+                      key={tipo.id} 
+                      onClick={() => setFormReporte({...formReporte, tipo: tipo.id as any})}
+                      className={`p-3 border rounded-lg hover:border-orange-400 hover:bg-gray-700 transition text-left flex items-center gap-3 ${
+                        formReporte.tipo === tipo.id 
+                          ? 'border-orange-500 bg-orange-500/10' 
+                          : 'border-gray-500 bg-[#1f2937]'
+                      }`}
+                    >
                       <tipo.Icon className="w-5 h-5 text-orange-400" />
                       <span className="text-sm font-medium text-gray-200">{tipo.label}</span>
                     </button>
@@ -1361,24 +1414,60 @@ export const AdminDashboard = () => {
               </div>
               <div>
                 <label htmlFor="titulo-reporte" className="block text-sm font-semibold text-gray-200 mb-1">Título del Reporte</label>
-                <input type="text" id="titulo-reporte" name="titulo-reporte" placeholder="Ej: Reporte de matrícula 2025-I" className="w-full px-3 py-2 bg-[#1f2937] border border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition text-white placeholder-gray-400" />
+                <input 
+                  type="text" 
+                  id="titulo-reporte" 
+                  name="titulo-reporte" 
+                  placeholder="Ej: Reporte de matrícula 2025-I" 
+                  value={formReporte.titulo}
+                  onChange={(e) => setFormReporte({...formReporte, titulo: e.target.value})}
+                  className="w-full px-3 py-2 bg-[#1f2937] border border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition text-white placeholder-gray-400" 
+                />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label htmlFor="fecha-inicio" className="block text-sm font-semibold text-gray-200 mb-1">Fecha Inicio</label>
-                  <input type="date" id="fecha-inicio" name="fecha-inicio" className="w-full px-3 py-2 bg-[#1f2937] border border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition text-white" />
+                  <input 
+                    type="date" 
+                    id="fecha-inicio" 
+                    name="fecha-inicio" 
+                    value={formReporte.fechaInicio}
+                    onChange={(e) => setFormReporte({...formReporte, fechaInicio: e.target.value})}
+                    className="w-full px-3 py-2 bg-[#1f2937] border border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition text-white" 
+                  />
                 </div>
                 <div>
                   <label htmlFor="fecha-fin" className="block text-sm font-semibold text-gray-200 mb-1">Fecha Fin</label>
-                  <input type="date" id="fecha-fin" name="fecha-fin" className="w-full px-3 py-2 bg-[#1f2937] border border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition text-white" />
+                  <input 
+                    type="date" 
+                    id="fecha-fin" 
+                    name="fecha-fin" 
+                    value={formReporte.fechaFin}
+                    onChange={(e) => setFormReporte({...formReporte, fechaFin: e.target.value})}
+                    className="w-full px-3 py-2 bg-[#1f2937] border border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition text-white" 
+                  />
                 </div>
               </div>
               <div>
-                <label htmlFor="descripcion" className="block text-sm font-semibold text-gray-200 mb-1">Descripción / Notas</label>
-                <textarea id="descripcion" name="descripcion" rows={2} placeholder="Notas adicionales sobre el reporte..." className="w-full px-3 py-2 bg-[#1f2937] border border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition resize-none text-white placeholder-gray-400" />
+                <label htmlFor="descripcion-reporte" className="block text-sm font-semibold text-gray-200 mb-1">Descripción / Notas</label>
+                <textarea 
+                  id="descripcion-reporte" 
+                  name="descripcion-reporte" 
+                  rows={2} 
+                  placeholder="Notas adicionales sobre el reporte..." 
+                  value={formReporte.descripcion}
+                  onChange={(e) => setFormReporte({...formReporte, descripcion: e.target.value})}
+                  className="w-full px-3 py-2 bg-[#1f2937] border border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition resize-none text-white placeholder-gray-400" 
+                />
               </div>
               <div className="flex items-center gap-2">
-                <input type="checkbox" id="export" className="w-4 h-4 text-orange-600 rounded border-gray-500 focus:ring-orange-500 bg-[#1f2937]" />
+                <input 
+                  type="checkbox" 
+                  id="export" 
+                  checked={formReporte.exportar}
+                  onChange={(e) => setFormReporte({...formReporte, exportar: e.target.checked})}
+                  className="w-4 h-4 text-orange-600 rounded border-gray-500 focus:ring-orange-500 bg-[#1f2937]" 
+                />
                 <label htmlFor="export" className="text-sm text-gray-300">Exportar automáticamente a Excel/PDF</label>
               </div>
               {/* Botones */}
@@ -1386,8 +1475,19 @@ export const AdminDashboard = () => {
                 <button onClick={() => setModalReporte(false)} className="flex-1 px-4 py-2 border border-gray-500 text-gray-300 rounded-lg hover:bg-gray-700 transition font-medium">
                   Cancelar
                 </button>
-                <button className="flex-1 px-4 py-2 bg-linear-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 transition font-medium shadow-none">
-                  Generar Reporte
+                <button 
+                  onClick={handleGenerarReporte}
+                  disabled={generandoReporte}
+                  className="flex-1 px-4 py-2 bg-linear-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 transition font-medium shadow-none disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {generandoReporte ? (
+                    <>
+                      <Loader2 size={18} className="animate-spin" />
+                      Generando...
+                    </>
+                  ) : (
+                    'Generar Reporte'
+                  )}
                 </button>
               </div>
             </div>

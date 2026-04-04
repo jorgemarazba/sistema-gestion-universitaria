@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { NotificacionesModal } from '../../components/admin/NotificacionesModal';
 import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom';
 import { useNotificacionesStore } from '../../store/notificacionesStore';
 import { useAuthStore } from '../../store/authStore';
@@ -21,6 +22,7 @@ const AdminLayout: React.FC = () => {
   const logout = useAuthStore((state) => state.logout);
   const user = useAuthStore((state) => state.user);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
   const { notificaciones, contadorPendientes, cargarNotificaciones, marcarComoLeida, marcarTodasComoLeidas } = useNotificacionesStore();
 
   // Determinar colores según el rol
@@ -242,7 +244,13 @@ const AdminLayout: React.FC = () => {
 
                   {/* Footer */}
                   <div className="p-3 border-t border-gray-700 text-center">
-                    <button className="text-blue-400 text-sm hover:text-blue-300 font-medium">
+                    <button 
+                      onClick={() => {
+                        setNotifOpen(false);
+                        setModalOpen(true);
+                      }}
+                      className="text-blue-400 text-sm hover:text-blue-300 font-medium"
+                    >
                       Ver todas las notificaciones
                     </button>
                   </div>
@@ -263,6 +271,20 @@ const AdminLayout: React.FC = () => {
           </div>
         </section>
       </main>
+      <NotificacionesModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        notificaciones={notificaciones}
+        onNotificacionClick={(notif) => {
+          marcarComoLeida(notif.id);
+          setModalOpen(false);
+          if (notif.entidadTipo === 'asesoramiento' && notif.entidadId) {
+            navigate(`/admin/asesoramiento/${notif.entidadId}`);
+          }
+        }}
+        onMarcarTodasLeidas={marcarTodasComoLeidas}
+        contadorPendientes={contadorPendientes}
+      />
     </div>
   );
 };

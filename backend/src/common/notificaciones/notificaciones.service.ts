@@ -164,9 +164,12 @@ export class NotificacionesService {
 
   async obtenerNotificacionesAdmin(): Promise<Notificacion[]> {
     return await this.notificacionesRepo.find({
-      where: { paraAdmin: true, estado: 'pendiente' },
+      where: [
+        { paraAdmin: true, estado: 'pendiente' },
+        { paraAdmin: true, estado: 'leida' },
+      ],
       order: { creadoEn: 'DESC' },
-      take: 20,
+      take: 50,
     });
   }
 

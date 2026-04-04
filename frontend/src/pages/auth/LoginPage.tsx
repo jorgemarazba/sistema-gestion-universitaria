@@ -97,11 +97,11 @@ export function LoginPage() {
         <div className="relative z-10 flex flex-col justify-between p-12 xl:p-16">
           {/* Header */}
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-linear-to-br from-amber-400 to-amber-600 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/20">
-              <GraduationCap className="w-8 h-8 text-white" strokeWidth={2} />
+            <div className="w-16 h-16 rounded-xl flex items-center justify-center shadow-xl overflow-hidden">
+              <img src="/icono.png" alt="Academic Manager" className="w-full h-full object-cover" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white tracking-tight">EduManager</h2>
+              <h2 className="text-xl font-bold text-white tracking-tight">Academic Manager</h2>
               <p className="text-sm text-blue-200/80">Sistema de Gestión Universitaria</p>
             </div>
           </div>
@@ -143,7 +143,7 @@ export function LoginPage() {
 
           {/* Footer */}
           <div className="text-sm text-blue-200/60">
-            © 2025 EduManager. Todos los derechos reservados.
+            © 2025 Academic Manager. Todos los derechos reservados.
           </div>
         </div>
 
@@ -159,11 +159,11 @@ export function LoginPage() {
         
         {/* Mobile Header */}
         <div className="lg:hidden absolute top-6 left-6 flex items-center gap-3 z-20">
-          <div className="w-10 h-10 bg-linear-to-br from-amber-400 to-amber-600 rounded-lg flex items-center justify-center">
-            <GraduationCap className="w-6 h-6 text-white" strokeWidth={2} />
+          <div className="w-12 h-12 rounded-lg flex items-center justify-center overflow-hidden shadow-lg">
+            <img src="/icono.png" alt="Academic Manager" className="w-full h-full object-cover" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-white">EduManager</h2>
+            <h2 className="text-lg font-bold text-white">Academic Manager</h2>
           </div>
         </div>
 

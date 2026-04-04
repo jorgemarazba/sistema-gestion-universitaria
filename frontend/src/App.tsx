@@ -15,6 +15,7 @@ import { AdminPagos } from './pages/admin/Pagos';
 import { AdminTickets } from './pages/admin/Tickets';
 import { AdminReportes } from './pages/admin/Reportes';
 import { AdminNotificaciones } from './pages/admin/Notificaciones';
+import { AsesoramientoDetailPage } from './pages/admin/AsesoramientoDetailPage';
 
 // Student Layout & Pages
 import { StudentLayout } from './pages/student/studentLayout';
@@ -159,6 +160,9 @@ function App() {
           </Route>
           <Route path="reportes" element={<ProtectedRoute allowedRoles={['administrador']}><Outlet /></ProtectedRoute>}>
             <Route index element={<AdminReportes />} />
+          </Route>
+          <Route path="asesoramiento/:id" element={<ProtectedRoute allowedRoles={['administrador']}><Outlet /></ProtectedRoute>}>
+            <Route index element={<AsesoramientoDetailPage />} />
           </Route>
           <Route path="notificaciones" element={<ProtectedRoute allowedRoles={['administrador']}><Outlet /></ProtectedRoute>}>
             <Route index element={<AdminNotificaciones />} />

@@ -51,13 +51,13 @@ export function Navbar() {
 
           <Link
             to="/login"
-            className="shrink-0 rounded-lg px-4 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/10 hover:text-white"
+            className="inline-flex items-center gap-2 rounded-xl border border-blue-500/50 bg-blue-950/40 px-4 py-2 text-sm font-medium text-blue-200 transition hover:bg-blue-900/50 hover:text-white"
           >
             Iniciar sesión
           </Link>
           <Link
             to="/solicitar-cuenta"
-            className="shrink-0 rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-violet-900/40 transition hover:bg-violet-500"
+            className="shrink-0 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-red-900/40 transition hover:bg-red-500"
           >
             Solicitar cuenta
           </Link>

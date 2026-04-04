@@ -68,36 +68,30 @@ export const AdminReportes = () => {
   const cargarDatos = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_URL}/notificaciones/historial`, {
-        params: { 
-          page: currentPage, 
-          limit: itemsPerPage,
-        }
-      });
       
-      // Manejar diferentes formatos de respuesta
-      const responseData = response.data;
+      // Cargar notificaciones y reportes en paralelo
+      const [notifsResponse, reportesResponse] = await Promise.all([
+        axios.get(`${API_URL}/notificaciones/historial`, {
+          params: { page: currentPage, limit: itemsPerPage }
+        }),
+        axios.get(`${API_URL}/reportes`)
+      ]);
       
-      // Si viene envuelto en {success, data}
-      const innerData = responseData.data || responseData;
+      // Procesar notificaciones
+      const notifsData = notifsResponse.data;
+      const innerNotifs = notifsData.data || notifsData;
+      const notificaciones = Array.isArray(innerNotifs) 
+        ? innerNotifs 
+        : (innerNotifs.data || []);
       
-      // Si innerData tiene data (doble envoltura) o es array directo
-      const notificaciones = Array.isArray(innerData) 
-        ? innerData 
-        : (innerData.data || []);
-        
-      const total = innerData.total || innerData.length || responseData.total || notificaciones.length || 0;
+      // Procesar reportes
+      const reportesData = reportesResponse.data;
+      const reportes = Array.isArray(reportesData) ? reportesData : (reportesData.data || []);
       
-      if (!Array.isArray(notificaciones)) {
-        console.error('La respuesta no es un array:', responseData);
-        setItems([]);
-        setTotalItems(0);
-        return;
-      }
-      
-      const transformedItems: ReporteItem[] = notificaciones.map((n: Notificacion) => ({
-        id: n.id,
-        tipo: 'notificacion',
+      // Transformar notificaciones
+      const notifItems: ReporteItem[] = notificaciones.map((n: Notificacion) => ({
+        id: `notif-${n.id}`,
+        tipo: 'notificacion' as const,
         titulo: n.titulo,
         descripcion: n.descripcion,
         categoria: n.metadata?.destinatarios || n.tipo || 'sistema',
@@ -107,11 +101,28 @@ export const AdminReportes = () => {
         emailsEnviados: n.metadata?.emailsEnviados,
         metadata: n.metadata,
       }));
-
-      setItems(transformedItems);
-      setTotalItems(total);
+      
+      // Transformar reportes
+      const reporteItems: ReporteItem[] = reportes.map((r: any) => ({
+        id: `reporte-${r.id}`,
+        tipo: 'reporte' as const,
+        titulo: r.titulo,
+        descripcion: r.resultado || r.descripcion,
+        categoria: r.tipo,
+        fecha: r.creadoEn,
+        estado: r.estado,
+        metadata: r.filtros,
+      }));
+      
+      // Combinar y ordenar por fecha (más reciente primero)
+      const allItems = [...notifItems, ...reporteItems].sort((a, b) => 
+        new Date(b.fecha).getTime() - new Date(a.fecha).getTime()
+      );
+      
+      setItems(allItems);
+      setTotalItems(allItems.length);
     } catch (err) {
-      console.error('Error al cargar historial:', err);
+      console.error('Error al cargar datos:', err);
       showToast('error', 'Error al cargar el historial');
       setItems([]);
       setTotalItems(0);
@@ -361,13 +372,15 @@ export const AdminReportes = () => {
                         >
                           <Eye size={18} />
                         </button>
-                        <button
-                          onClick={() => openEditModal(item)}
-                          className="p-2 text-yellow-400 hover:text-yellow-300 hover:bg-yellow-500/10 rounded-lg transition"
-                          title="Editar"
-                        >
-                          <Pencil size={18} />
-                        </button>
+                        {item.tipo === 'notificacion' && (
+                          <button
+                            onClick={() => openEditModal(item)}
+                            className="p-2 text-yellow-400 hover:text-yellow-300 hover:bg-yellow-500/10 rounded-lg transition"
+                            title="Editar"
+                          >
+                            <Pencil size={18} />
+                          </button>
+                        )}
                         <button
                           onClick={() => {
                             setItemToDelete(item);

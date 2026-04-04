@@ -15,6 +15,19 @@ export class ReportesController {
     return this.reportesService.create(createReporteDto);
   }
 
+  @Post('generar')
+  @ApiOperation({ summary: 'Generar reporte dinámico desde dashboard' })
+  async generarDinamico(@Body() data: {
+    tipo: 'academico' | 'financiero' | 'usuarios' | 'cursos';
+    titulo: string;
+    fechaInicio?: string;
+    fechaFin?: string;
+    descripcion?: string;
+    exportar?: boolean;
+  }) {
+    return await this.reportesService.generarReporteDinamico(data);
+  }
+
   @Get()
   @ApiOperation({ summary: 'Obtener todos los reportes' })
   findAll(@Query('tipo') tipo?: string) {

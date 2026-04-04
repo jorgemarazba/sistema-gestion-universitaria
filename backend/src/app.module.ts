@@ -11,6 +11,8 @@ import { PagosModule } from './common/pagos/pagos.module';
 import { CursosModule } from './common/cursos/cursos.module';
 import { ProgramasModule } from './common/programas/programas.module';
 import { PresenceModule } from './common/presence/presence.module';
+import { ReportesModule } from './common/reportes/reportes.module';
+import { AsesoramientoModule } from './common/asesoramiento/asesoramiento.module';
 
 @Module({
   imports: [
@@ -43,6 +45,8 @@ import { PresenceModule } from './common/presence/presence.module';
     CursosModule,
     ProgramasModule,
     PresenceModule,
+    ReportesModule,
+    AsesoramientoModule,
   ],
   controllers: [AppController],
   providers: [AppService],
