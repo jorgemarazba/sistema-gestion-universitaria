@@ -1,12 +1,16 @@
 import { Controller, Post, Get, Body, Param, Patch, Delete, UseInterceptors, UploadedFiles } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiConsumes } from '@nestjs/swagger';
 import { FilesInterceptor } from '@nestjs/platform-express';
+import { B2StorageService } from '../storage/b2-storage.service';
 import { AsesoramientoService } from './asesoramiento.service';
 
 @ApiTags('Asesoramiento')
 @Controller('asesoramiento')
 export class AsesoramientoController {
-  constructor(private readonly asesoramientoService: AsesoramientoService) {}
+  constructor(
+    private readonly asesoramientoService: AsesoramientoService,
+    private readonly b2Storage: B2StorageService,
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'Crear nueva solicitud de asesoramiento' })
@@ -77,22 +81,47 @@ export class AsesoramientoController {
   }
 
   @Post(':id/archivos')
-  @ApiOperation({ summary: 'Subir archivos adjuntos a una solicitud' })
+  @ApiOperation({ summary: 'Subir archivos adjuntos a una solicitud (Cloudflare R2)' })
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FilesInterceptor('archivos', 5))
   async subirArchivos(
     @Param('id') id: string,
     @UploadedFiles() archivos: any[],
   ) {
-    return this.asesoramientoService.subirArchivos(id, archivos);
+    console.log(`[Controller] Subiendo ${archivos?.length || 0} archivos para asesoramiento ${id}`);
+    
+    try {
+      const uploadedFiles: { nombre: string; url: string; key: string; tipo: string }[] = [];
+
+      for (const archivo of archivos) {
+        console.log(`[Controller] Procesando archivo: ${archivo?.originalname}, tipo: ${archivo?.mimetype}, size: ${archivo?.size}`);
+        const { url, key } = await this.b2Storage.uploadFile(archivo, `asesoramiento/${id}`);
+        uploadedFiles.push({
+          nombre: archivo.originalname,
+          url,
+          key,
+          tipo: archivo.mimetype,
+        });
+        console.log(`[Controller] Archivo subido exitosamente: ${key}`);
+      }
+
+      console.log(`[Controller] Llamando a subirArchivosR2 con ${uploadedFiles.length} archivos`);
+      const result = await this.asesoramientoService.subirArchivosR2(id, uploadedFiles);
+      console.log(`[Controller] Resultado de subirArchivosR2:`, result);
+      return result;
+    } catch (error) {
+      console.error('[Controller] ERROR al subir archivos:', error);
+      throw error;
+    }
   }
 
-  @Delete(':id/archivos/:archivoNombre')
-  @ApiOperation({ summary: 'Eliminar un archivo adjunto' })
+  @Delete(':id/archivos/:key')
+  @ApiOperation({ summary: 'Eliminar un archivo adjunto de R2' })
   async eliminarArchivo(
     @Param('id') id: string,
-    @Param('archivoNombre') archivoNombre: string,
+    @Param('key') key: string,
   ) {
-    return this.asesoramientoService.eliminarArchivo(id, archivoNombre);
+    await this.b2Storage.deleteFile(key);
+    return this.asesoramientoService.eliminarArchivoR2(id, key);
   }
 }

@@ -21,6 +21,13 @@ export class ProgramasController {
     return this.programasService.findAll(estado);
   }
 
+  @Get('compare')
+  @ApiOperation({ summary: 'Comparar múltiples programas' })
+  async compare(@Query('ids') ids: string) {
+    const programaIds = ids.split(',').slice(0, 3);
+    return this.programasService.compare(programaIds);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Obtener un programa por ID' })
   findOne(@Param('id') id: string) {

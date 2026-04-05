@@ -54,7 +54,7 @@ export class Asesoramiento {
   notas: string;
 
   @Column({ type: 'simple-json', nullable: true })
-  archivos: { nombre: string; url: string; tipo: string }[];
+  archivos: { nombre: string; url: string; tipo: string; key?: string; storage?: string }[];
 
   @Column({ nullable: true })
   respondidoEn: Date;

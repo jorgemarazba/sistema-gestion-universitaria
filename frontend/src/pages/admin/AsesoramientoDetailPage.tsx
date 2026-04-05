@@ -111,11 +111,29 @@ export function AsesoramientoDetailPage() {
     });
 
     try {
-      await axios.post(`${API_URL}/asesoramiento/${id}/archivos`, formData, {
+      const response = await axios.post(`${API_URL}/asesoramiento/${id}/archivos`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
+      console.log('[Frontend] Respuesta completa:', response.data);
       showToast('Archivos subidos exitosamente', 'success');
-      cargarAsesoramiento();
+      
+      // Extraer datos - manejar estructura envuelta en 'data' o directa
+      const responseData = response.data.data || response.data;
+      console.log('[Frontend] Datos extraídos:', responseData);
+      
+      if (responseData) {
+        // Actualizar el estado con los nuevos datos, preservando el asesoramiento existente
+        const updatedAsesoramiento = {
+          ...asesoramiento,
+          ...responseData.asesoramiento,
+          archivos: responseData.archivos || responseData.asesoramiento?.archivos || []
+        };
+        console.log('[Frontend] Actualizando estado con:', updatedAsesoramiento);
+        console.log('[Frontend] Total archivos:', updatedAsesoramiento.archivos?.length);
+        setAsesoramiento(updatedAsesoramiento);
+      } else {
+        cargarAsesoramiento();
+      }
     } catch (err) {
       console.error('Error al subir archivos:', err);
       showToast('Error al subir archivos', 'error');
@@ -294,13 +312,13 @@ export function AsesoramientoDetailPage() {
                     <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                     </svg>
-                    Archivos Adjuntos ({asesoramiento.archivos?.length || 0})
+                    Archivos Adjuntos ({asesoramiento.archivos?.filter(a => a.url?.startsWith('http'))?.length || 0})
                   </h4>
                   
-                  {/* Lista de archivos existentes */}
-                  {asesoramiento.archivos && asesoramiento.archivos.length > 0 && (
+                  {/* Lista de archivos existentes - solo con URLs válidas */}
+                  {asesoramiento.archivos && asesoramiento.archivos.filter(a => a.url?.startsWith('http')).length > 0 && (
                     <div className="space-y-2 mb-4">
-                      {asesoramiento.archivos.map((archivo, index) => (
+                      {asesoramiento.archivos.filter(a => a.url?.startsWith('http')).map((archivo, index) => (
                         <div key={index} className="flex items-center justify-between bg-slate-600/50 p-2 rounded-lg">
                           <div className="flex items-center gap-2 overflow-hidden">
                             <span className="text-2xl">

@@ -392,6 +392,8 @@ Para información más detallada sobre este programa específico, te invitamos a
   }
 
   async subirArchivos(id: string, archivos: any[]) {
+    console.log(`[DEBUG] Subiendo archivos para asesoramiento ${id}:`, archivos?.length || 0);
+    
     const solicitud = await this.asesoramientoRepo.findOne({ where: { id } });
     if (!solicitud) {
       throw new NotFoundException('Solicitud de asesoramiento no encontrada');
@@ -401,17 +403,20 @@ Para información más detallada sobre este programa específico, te invitamos a
     if (!solicitud.archivos) {
       solicitud.archivos = [];
     }
+    console.log(`[DEBUG] Archivos existentes:`, solicitud.archivos?.length || 0);
 
     // Procesar cada archivo
     const nuevosArchivos = archivos.map((archivo) => ({
       nombre: archivo.originalname,
-      url: `/uploads/asesoramiento/${id}/${archivo.filename}`,
+      url: archivo.path || `/uploads/asesoramiento/${id}/${archivo.filename}`,
       tipo: archivo.mimetype,
     }));
+    console.log(`[DEBUG] Nuevos archivos:`, nuevosArchivos);
 
     // Agregar a la lista existente
     solicitud.archivos = [...solicitud.archivos, ...nuevosArchivos];
     await this.asesoramientoRepo.save(solicitud);
+    console.log(`[DEBUG] Archivos guardados:`, solicitud.archivos);
 
     return {
       success: true,
@@ -436,6 +441,90 @@ Para información más detallada sobre este programa específico, te invitamos a
     return {
       success: true,
       message: 'Archivo eliminado exitosamente',
+    };
+  }
+
+  async subirArchivosR2(
+    id: string,
+    archivos: { nombre: string; url: string; key: string; tipo: string }[],
+  ) {
+    console.log(`[subirArchivosR2] Iniciando para asesoramiento ${id}, archivos recibidos:`, archivos.length);
+    
+    const solicitud = await this.asesoramientoRepo.findOne({ where: { id } });
+    if (!solicitud) {
+      throw new NotFoundException('Solicitud de asesoramiento no encontrada');
+    }
+    console.log(`[subirArchivosR2] Solicitud encontrada, archivos actuales:`, solicitud.archivos);
+
+    // Inicializar array de archivos si no existe
+    if (!solicitud.archivos) {
+      solicitud.archivos = [];
+    }
+
+    // Agregar archivos con metadata de B2
+    const nuevosArchivos = archivos.map((archivo) => ({
+      nombre: archivo.nombre,
+      url: archivo.url,
+      tipo: archivo.tipo,
+      key: archivo.key,
+      storage: 'b2',
+    }));
+    console.log(`[subirArchivosR2] Nuevos archivos a agregar:`, nuevosArchivos);
+
+    solicitud.archivos = [...solicitud.archivos, ...nuevosArchivos];
+    console.log(`[subirArchivosR2] Archivos combinados antes de guardar:`, solicitud.archivos);
+    
+    const savedSolicitud = await this.asesoramientoRepo.save(solicitud);
+    console.log(`[subirArchivosR2] Solicitud guardada, archivos en respuesta:`, savedSolicitud.archivos);
+
+    // Recargar la solicitud para asegurar que tenemos los datos frescos
+    const refreshedSolicitud = await this.asesoramientoRepo.findOne({ where: { id } });
+    const finalSolicitud = refreshedSolicitud || savedSolicitud;
+
+    // Convertir a objeto plano para serialización JSON
+    const asesoramientoPlain = {
+      id: finalSolicitud.id,
+      nombres: finalSolicitud.nombres,
+      apellidos: finalSolicitud.apellidos,
+      email: finalSolicitud.email,
+      telefono: finalSolicitud.telefono,
+      pais: finalSolicitud.pais,
+      ciudad: finalSolicitud.ciudad,
+      modalidad: finalSolicitud.modalidad,
+      programa: finalSolicitud.programa,
+      estado: finalSolicitud.estado,
+      respuesta: finalSolicitud.respuesta,
+      notas: finalSolicitud.notas,
+      archivos: finalSolicitud.archivos,
+      respondidoEn: finalSolicitud.respondidoEn,
+      creadoEn: finalSolicitud.creadoEn,
+      actualizadoEn: finalSolicitud.actualizadoEn,
+    };
+
+    return {
+      success: true,
+      message: 'Archivos subidos exitosamente a Backblaze B2',
+      archivos: asesoramientoPlain.archivos,
+      asesoramiento: asesoramientoPlain,
+    };
+  }
+
+  async eliminarArchivoR2(id: string, key: string) {
+    const solicitud = await this.asesoramientoRepo.findOne({ where: { id } });
+    if (!solicitud || !solicitud.archivos) {
+      throw new NotFoundException('Solicitud o archivos no encontrados');
+    }
+
+    // Filtrar el archivo a eliminar por key
+    solicitud.archivos = solicitud.archivos.filter(
+      (archivo) => archivo.key !== key,
+    );
+
+    await this.asesoramientoRepo.save(solicitud);
+
+    return {
+      success: true,
+      message: 'Archivo eliminado de la base de datos',
     };
   }
 }

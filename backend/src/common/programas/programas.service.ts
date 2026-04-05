@@ -51,4 +51,9 @@ export class ProgramasService {
     const programa = await this.findOne(id);
     await this.programaRepo.remove(programa);
   }
+
+  async compare(ids: string[]): Promise<Programa[]> {
+    const programas = await this.programaRepo.findByIds(ids);
+    return programas;
+  }
 }
