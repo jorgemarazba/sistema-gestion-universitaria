@@ -500,9 +500,9 @@ Para información más detallada sobre este programa específico, te invitamos a
     }));
     console.log(`[subirArchivosR2] Nuevos archivos a agregar:`, nuevosArchivos);
 
-    // Reemplazar archivos con los nuevos (no acumular)
-    solicitud.archivos = nuevosArchivos;
-    console.log(`[subirArchivosR2] Archivos reemplazados (solo nuevos):`, solicitud.archivos);
+    // Acumular archivos (agregar a los existentes)
+    solicitud.archivos = [...solicitud.archivos, ...nuevosArchivos];
+    console.log(`[subirArchivosR2] Archivos acumulados (total: ${solicitud.archivos.length}):`, solicitud.archivos);
     
     const savedSolicitud = await this.asesoramientoRepo.save(solicitud);
     console.log(`[subirArchivosR2] Solicitud guardada, archivos en respuesta:`, savedSolicitud.archivos);
@@ -540,17 +540,32 @@ Para información más detallada sobre este programa específico, te invitamos a
   }
 
   async eliminarArchivoR2(id: string, key: string) {
+    console.log(`[Service] eliminarArchivoR2 - ID: ${id}, Key: ${key}`);
+    
     const solicitud = await this.asesoramientoRepo.findOne({ where: { id } });
     if (!solicitud || !solicitud.archivos) {
+      console.log(`[Service] Solicitud no encontrada o sin archivos`);
       throw new NotFoundException('Solicitud o archivos no encontrados');
     }
-
+    
+    console.log(`[Service] Archivos actuales:`, solicitud.archivos);
+    console.log(`[Service] Total archivos antes: ${solicitud.archivos.length}`);
+    
     // Filtrar el archivo a eliminar por key
+    const archivosAntes = solicitud.archivos.length;
     solicitud.archivos = solicitud.archivos.filter(
       (archivo) => archivo.key !== key,
     );
+    
+    console.log(`[Service] Total archivos después: ${solicitud.archivos.length}`);
+    console.log(`[Service] Archivos eliminados: ${archivosAntes - solicitud.archivos.length}`);
+    
+    if (archivosAntes === solicitud.archivos.length) {
+      console.log(`[Service] ADVERTENCIA: No se encontró archivo con key ${key}`);
+    }
 
     await this.asesoramientoRepo.save(solicitud);
+    console.log(`[Service] Solicitud guardada exitosamente`);
 
     return {
       success: true,

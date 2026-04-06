@@ -121,6 +121,8 @@ export class AsesoramientoController {
     @Param('id') id: string,
     @Param('key') key: string,
   ) {
+    console.log(`[Controller] Eliminando archivo - ID: ${id}, Key recibida: ${key}`);
+    console.log(`[Controller] Key decodificada: ${decodeURIComponent(key)}`);
     await this.b2Storage.deleteFile(key);
     return this.asesoramientoService.eliminarArchivoR2(id, key);
   }

@@ -344,7 +344,7 @@ interface Asesoramiento {
   programa: string;
   estado: string;
   creadoEn: string;
-  archivos?: { nombre: string; url: string; tipo: string }[];
+  archivos?: { nombre: string; url: string; tipo: string; key?: string }[];
 }
 
 export function AsesoramientoDetailPage() {
@@ -712,7 +712,7 @@ export function AsesoramientoDetailPage() {
                             <span className="text-white text-sm truncate">{archivo.nombre}</span>
                           </div>
                           <button
-                            onClick={() => eliminarArchivo(archivo.nombre)}
+                            onClick={() => eliminarArchivo(archivo.key || archivo.nombre)}
                             className="text-red-400 hover:text-red-300 p-1"
                             title="Eliminar archivo"
                           >
