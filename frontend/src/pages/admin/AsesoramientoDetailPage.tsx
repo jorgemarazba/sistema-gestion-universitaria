@@ -92,7 +92,8 @@ const generarEmailAsesoramiento = (programa: string, nombreEstudiante: string) =
       padding: 20px; 
     }
     .container { 
-      max-width: 600px; 
+      width: 100%; 
+      max-width: 100%;
       margin: 0 auto; 
       background: white; 
       border-radius: 8px;

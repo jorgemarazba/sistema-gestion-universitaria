@@ -56,6 +56,8 @@ export const AdminUsuarios = () => {
   const [mostrarConfirmacionEliminar, setMostrarConfirmacionEliminar] = useState(false);
   const [usuarioEliminando, setUsuarioEliminando] = useState<Usuario | null>(null);
   const [eliminandoUsuario, setEliminandoUsuario] = useState(false);
+  const [usuariosSeleccionados, setUsuariosSeleccionados] = useState<Set<string>>(new Set());
+  const [seleccionarTodos, setSeleccionarTodos] = useState(false);
 
   const cargarUsuarios = async () => {
     try {
@@ -268,6 +270,28 @@ export const AdminUsuarios = () => {
       </div>
 
       <div className="bg-[#374151] rounded-xl shadow-lg border border-gray-600 overflow-hidden">
+        {usuariosSeleccionados.size > 0 && (
+          <div className="bg-blue-600/20 border-b border-blue-500/30 px-6 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="text-blue-300 text-sm font-medium">
+                {usuariosSeleccionados.size} usuario{usuariosSeleccionados.size !== 1 ? 's' : ''} seleccionado{usuariosSeleccionados.size !== 1 ? 's' : ''}
+              </span>
+              <span className="text-gray-400 text-sm">
+                ({usuariosSeleccionados.size === usuariosFiltrados.length ? 'todos los filtrados' : 'de ' + usuariosFiltrados.length + ' filtrados'})
+              </span>
+            </div>
+            <button
+              onClick={() => {
+                setUsuariosSeleccionados(new Set());
+                setSeleccionarTodos(false);
+              }}
+              className="text-sm text-red-400 hover:text-red-300 font-medium transition"
+            >
+              Limpiar selección
+            </button>
+          </div>
+        )}
+        
         <div className="px-6 py-4 border-b border-slate-200">
           <h2 className="text-lg font-bold flex items-center gap-2 text-white">
             <Users size={20} className="text-blue-400" />
@@ -279,6 +303,25 @@ export const AdminUsuarios = () => {
           <table className="w-full">
             <thead>
               <tr className="bg-slate-800 border-b border-gray-600">
+                <th className="px-4 py-4 text-center w-12">
+                  <input
+                    type="checkbox"
+                    checked={seleccionarTodos}
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      setSeleccionarTodos(checked);
+                      if (checked) {
+                        // Seleccionar TODOS los usuarios filtrados (no solo los visibles)
+                        const todosLosIds = usuariosFiltrados.map(u => u.id_usuario);
+                        setUsuariosSeleccionados(new Set(todosLosIds));
+                      } else {
+                        setUsuariosSeleccionados(new Set());
+                      }
+                    }}
+                    className="w-4 h-4 rounded border-gray-500 bg-gray-700 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                    title="Seleccionar todos los usuarios filtrados"
+                  />
+                </th>
                 <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-300">ID</th>
                 <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-300">Nombre</th>
                 <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-300">Contacto</th>
@@ -291,6 +334,28 @@ export const AdminUsuarios = () => {
             <tbody className="divide-y divide-gray-600">
               {usuariosFiltrados.map((usuario) => (
                 <tr key={usuario.id_usuario} className="hover:bg-slate-800 transition">
+                  <td className="px-4 py-4 text-center">
+                    <input
+                      type="checkbox"
+                      checked={usuariosSeleccionados.has(usuario.id_usuario)}
+                      onChange={(e) => {
+                        const newSet = new Set(usuariosSeleccionados);
+                        if (e.target.checked) {
+                          newSet.add(usuario.id_usuario);
+                        } else {
+                          newSet.delete(usuario.id_usuario);
+                        }
+                        setUsuariosSeleccionados(newSet);
+                        // Actualizar estado de "seleccionar todos" si es necesario
+                        if (newSet.size !== usuariosFiltrados.length) {
+                          setSeleccionarTodos(false);
+                        } else if (newSet.size === usuariosFiltrados.length) {
+                          setSeleccionarTodos(true);
+                        }
+                      }}
+                      className="w-4 h-4 rounded border-gray-500 bg-gray-700 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                    />
+                  </td>
                   <td className="px-6 py-4 text-sm font-medium text-white">#{usuario.id_usuario.slice(0,8)}</td>
                   <td className="px-6 py-4">
                     <div className="text-sm font-semibold text-white">{usuario.nombre} {usuario.apellido}</div>

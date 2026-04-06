@@ -291,7 +291,21 @@ Para información más detallada sobre este programa específico, te invitamos a
     // Generar documentos según la carrera
     const documentos = this.generarDocumentosPrograma(solicitud.programa);
     
-    const contenidoHtml = `
+    // Si el mensaje es HTML completo (contiene <!DOCTYPE o <html), usarlo directamente
+    const esHtmlCompleto = mensajePersonalizado && (
+      mensajePersonalizado.includes('<!DOCTYPE') || 
+      mensajePersonalizado.includes('<html')
+    );
+    
+    let contenidoHtml: string;
+    
+    if (esHtmlCompleto) {
+      // Usar el HTML del frontend directamente sin envolver
+      contenidoHtml = mensajePersonalizado;
+      console.log('[enviarEmailRespuesta] Usando HTML completo del frontend directamente');
+    } else {
+      // Usar el template del backend con el mensaje personalizado dentro
+      contenidoHtml = `
       <div style="font-family: 'Segoe UI', Arial, sans-serif; width: 100%; margin: 0 auto; color: #333;">
         <!-- Header -->
         <div style="background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); padding: 30px; text-align: center;">
@@ -378,6 +392,7 @@ Para información más detallada sobre este programa específico, te invitamos a
         </div>
       </div>
     `;
+    }
 
     // Enviar email con los archivos adjuntos desde B2
     console.log(`[enviarEmailRespuesta] Archivos a adjuntar:`, solicitud.archivos);
