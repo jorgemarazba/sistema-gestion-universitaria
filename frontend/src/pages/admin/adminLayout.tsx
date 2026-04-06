@@ -210,7 +210,11 @@ const AdminLayout: React.FC = () => {
                       notificaciones.map((notif) => (
                         <div 
                           key={notif.id} 
-                          onClick={() => marcarComoLeida(notif.id)}
+                          onClick={() => {
+                            marcarComoLeida(notif.id);
+                            setNotifOpen(false);
+                            setModalOpen(true);
+                          }}
                           className={`flex items-start gap-3 px-4 py-3 hover:bg-[#374151] transition cursor-pointer ${
                             notif.estado === 'pendiente' ? 'bg-[#1e3a5f]/30' : ''
                           }`}

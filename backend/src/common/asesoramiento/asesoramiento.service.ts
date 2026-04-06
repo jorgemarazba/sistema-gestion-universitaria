@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Asesoramiento } from './entities/asesoramiento.entity';
 import { NotificacionesService } from '../notificaciones/notificaciones.service';
 import { MailService } from '../mail/mail.service';
+import { B2StorageService } from '../storage/b2-storage.service';
 
 @Injectable()
 export class AsesoramientoService {
@@ -12,6 +13,7 @@ export class AsesoramientoService {
     private asesoramientoRepo: Repository<Asesoramiento>,
     private notificacionesService: NotificacionesService,
     private mailService: MailService,
+    private b2StorageService: B2StorageService,
   ) {}
 
   async crearSolicitud(data: {
@@ -300,6 +302,13 @@ Para información más detallada sobre este programa específico, te invitamos a
         <!-- Body -->
         <div style="background: #ffffff; padding: 40px 30px; border: 1px solid #e5e7eb; border-top: none;">
           <h2 style="color: #1e3a5f; margin-top: 0;">Estimado/a ${solicitud.nombres} ${solicitud.apellidos},</h2>
+          
+          ${mensajePersonalizado ? `
+          <div style="background: #f0f9ff; border-left: 4px solid #0ea5e9; padding: 20px; margin: 20px 0; border-radius: 0 8px 8px 0;">
+            <p style="color: #334155; font-size: 16px; line-height: 1.6; margin: 0; white-space: pre-wrap;">${mensajePersonalizado}</p>
+          </div>
+          ` : ''}
+          
           <p style="color: #6b7280; font-size: 16px; line-height: 1.6;">
             Un gusto saludarte. Es un placer enviarte la guía para tu camino universitario.
           </p>
@@ -370,13 +379,33 @@ Para información más detallada sobre este programa específico, te invitamos a
       </div>
     `;
 
-    // Enviar el email (sin archivos adjuntos que no existen físicamente)
-    // NOTA: Los archivos se guardan como URLs, no como archivos físicos locales
+    // Enviar email con los archivos adjuntos desde B2
+    console.log(`[enviarEmailRespuesta] Archivos a adjuntar:`, solicitud.archivos);
+    const archivosValidos = (solicitud.archivos || []).filter(a => a.url?.startsWith('http') && a.key);
+    console.log(`[enviarEmailRespuesta] Archivos válidos (con URL http y key):`, archivosValidos);
+    
+    // Descargar archivos de B2 y convertir al formato correcto
+    const attachments: Array<{ filename: string; content: Buffer }> = [];
+    for (const archivo of archivosValidos) {
+      if (!archivo.key) continue;
+      try {
+        console.log(`[enviarEmailRespuesta] Descargando archivo de B2: ${archivo.key}`);
+        const buffer = await this.b2StorageService.downloadFile(archivo.key);
+        attachments.push({
+          filename: archivo.nombre,
+          content: buffer,
+        });
+        console.log(`[enviarEmailRespuesta] Archivo descargado: ${archivo.nombre} (${buffer.length} bytes)`);
+      } catch (err) {
+        console.error(`[enviarEmailRespuesta] Error descargando ${archivo.nombre}:`, err.message);
+      }
+    }
+    
     await this.mailService.enviarEmailHtmlDirecto(
       solicitud.email,
       asunto,
       contenidoHtml,
-      [], // No enviar archivos adjuntos hasta que se implemente almacenamiento físico
+      attachments,
     );
 
     // Actualizar el estado de la solicitud a respondido
@@ -471,8 +500,9 @@ Para información más detallada sobre este programa específico, te invitamos a
     }));
     console.log(`[subirArchivosR2] Nuevos archivos a agregar:`, nuevosArchivos);
 
-    solicitud.archivos = [...solicitud.archivos, ...nuevosArchivos];
-    console.log(`[subirArchivosR2] Archivos combinados antes de guardar:`, solicitud.archivos);
+    // Reemplazar archivos con los nuevos (no acumular)
+    solicitud.archivos = nuevosArchivos;
+    console.log(`[subirArchivosR2] Archivos reemplazados (solo nuevos):`, solicitud.archivos);
     
     const savedSolicitud = await this.asesoramientoRepo.save(solicitud);
     console.log(`[subirArchivosR2] Solicitud guardada, archivos en respuesta:`, savedSolicitud.archivos);

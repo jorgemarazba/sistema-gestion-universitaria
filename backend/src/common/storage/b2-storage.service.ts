@@ -98,6 +98,35 @@ export class B2StorageService {
     }
   }
 
+  async downloadFile(key: string): Promise<Buffer> {
+    if (!this.b2) {
+      throw new Error('B2 no configurado');
+    }
+
+    const bucketId = await this.getBucketId();
+    
+    // Buscar el archivo por nombre
+    const { data: listFilesData } = await this.b2.listFileNames({
+      bucketId,
+      startFileName: key,
+      maxFileCount: 1,
+    });
+
+    if (listFilesData.files.length === 0 || listFilesData.files[0].fileName !== key) {
+      throw new Error(`Archivo no encontrado en B2: ${key}`);
+    }
+
+    const fileId = listFilesData.files[0].fileId;
+    
+    // Descargar el archivo
+    const { data: downloadData } = await this.b2.downloadFileById({
+      fileId,
+      responseType: 'arraybuffer',
+    });
+
+    return Buffer.from(downloadData);
+  }
+
   async deleteFile(key: string): Promise<void> {
     if (!this.b2) {
       throw new Error('B2 no configurado');

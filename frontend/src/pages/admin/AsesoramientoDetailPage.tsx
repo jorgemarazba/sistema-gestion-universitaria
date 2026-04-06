@@ -1,9 +1,336 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Mail, Phone, MapPin, GraduationCap, Calendar, User } from 'lucide-react';
+import { ArrowLeft, Mail, Phone, MapPin, GraduationCap, Calendar, User, Pencil, X, Save } from 'lucide-react';
 import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3003/api/v1';
+
+// Contenido base por carrera siguiendo la estructura de 5 secciones
+const carreraTemplates: Record<string, {
+  gancho: string;
+  vision: string;
+  diferenciador: string;
+  proyeccion: string;
+  cta: string;
+}> = {
+  'Medicina': {
+    gancho: 'Elegir la medicina es abrazar una vocación donde la ciencia más rigurosa se encuentra con la compasión más profunda. Cada diagnóstico que realices, cada tratamiento que prescríbas, tiene el poder de transformar vidas enteras y devolver la esperanza a quienes más lo necesitan.',
+    vision: `<strong>La Excelencia en Formación Médica</strong><br><br>
+Nuestro programa forma médicos con un enfoque integral que combina conocimiento científico de vanguardia con habilidades clínicas prácticas desde los primeros semestres. Durante tu formación dominarás:<br><br>
+<strong>• Ciencias Básicas y Anatomía:</strong> Estudiarás anatomía humana con modelos tridimensionales y cadáveres reales, comprendiendo la complejidad del cuerpo humano desde la perspectiva celular hasta los sistemas orgánicos integrados.<br><br>
+<strong>• Diagnóstico y Clínica:</strong> Desarrollarás habilidades de semiología, interpretación de exámenes de laboratorio e imagenología diagnóstica, aprendiendo a identificar patrones clínicos y establecer diagnósticos diferenciales precisos.<br><br>
+<strong>• Práctica Hospitalaria:</strong> Rotarás por todas las especialidades médicas y quirúrgicas en nuestro Hospital Universitario, atendiendo pacientes reales bajo la supervisión de médicos especialistas con décadas de experiencia.`,
+    diferenciador: `<strong>Infraestructura de Vanguardia</strong><br><br>
+Nuestra facultad se distingue por contar con tecnología médica de última generación que prepara a nuestros estudiantes para los desafíos de la medicina moderna. Disponemos de simuladores de realidad virtual para procedimientos quirúrgicos, laboratorios de investigación en genética y biología molecular, y convenios con los hospitales más prestigiosos del mundo para rotaciones internacionales.`,
+    proyeccion: `<strong>Horizontes Profesionales</strong><br><br>
+Como médico egresado, tu campo de práctica no tiene límites. Podrás especializarte en áreas quirúrgicas de alta complejidad, dedicarte a la investigación biomédica, trabajar en medicina deportiva con atletas de élite, o emprender en el sector salud. La demanda de médicos bien formados es universal, y tu preparación te abrirá puertas en los mejores hospitales de América Latina, Europa y Estados Unidos.`,
+    cta: 'Tu camino hacia convertirte en un profesional de la salud de excelencia comienza aquí. Reserva tu cita de asesoría personalizada para conocer cómo estructurar tu plan de estudios según la especialidad que desees.'
+  },
+  'Ingeniería': {
+    gancho: 'Tomar la decisión de formarse en Ingeniería de Sistemas es aceptar el reto de convertirse en un arquitecto del mundo digital. Esta disciplina trasciende la simple escritura de código; se trata de una ciencia dedicada a la integración de procesos, la optimización de recursos y la creación de infraestructuras lógicas que sostienen la economía y la sociedad moderna.',
+    vision: `<strong>La Profundidad del Aprendizaje</strong><br><br>
+Durante tu formación, no solo aprenderás sintaxis de lenguajes de programación, sino que desarrollarás un pensamiento sistémico capaz de descomponer problemas complejos en soluciones escalables. El enfoque académico te llevará a dominar:<br><br>
+<strong>• Arquitectura de Software y Backend:</strong> Comprenderás el funcionamiento interno de los sistemas, la gestión eficiente de servidores y el diseño de APIs robustas que permitan la comunicación fluida entre aplicaciones.<br><br>
+<strong>• Gestión de Datos:</strong> Aprenderás a diseñar y administrar bases de datos relacionales y no relacionales, asegurando la integridad, seguridad y disponibilidad de la información, que es el activo más valioso de cualquier organización actual.<br><br>
+<strong>• Frontend y Experiencia de Usuario:</strong> Desarrollarás la capacidad de crear interfaces modernas y reactivas que no solo sean estéticas, sino que respondan a una lógica de usabilidad intuitiva para el usuario final.`,
+    diferenciador: `<strong>El Diferencial Tecnológico</strong><br><br>
+La ingeniería moderna exige el dominio de herramientas de vanguardia. En esta carrera, la teoría se encuentra con la práctica mediante la implementación de marcos de trabajo (frameworks) de alto rendimiento, el despliegue en entornos de nube y la integración de modelos de inteligencia artificial para automatizar tareas y generar análisis predictivos.`,
+    proyeccion: `<strong>Proyección Profesional</strong><br><br>
+Como ingeniero de sistemas, tu campo de acción no tiene fronteras. Podrás liderar proyectos de transformación digital, desempeñarte como desarrollador Full-Stack, consultor en ciberseguridad o arquitecto de datos. El mercado laboral actual no solo busca programadores, sino profesionales con criterio técnico que sepan gestionar presupuestos de desarrollo, liderar equipos interdisciplinarios y garantizar la sostenibilidad de los proyectos de software.`,
+    cta: 'Tu futuro como motor de innovación tecnológica comienza con una base académica sólida que te brinde las herramientas para evolucionar al ritmo de la industria. Agenda tu asesoría personalizada hoy mismo.'
+  },
+  'Derecho': {
+    gancho: 'En una sociedad donde los conflictos son cada vez más complejos y multifacéticos, el derecho se ha convertido en la herramienta más poderosa para generar justicia real, proteger derechos fundamentales y transformar comunidades enteras hacia un estado de mayor equidad.',
+    vision: `<strong>Formación Jurídica Integral</strong><br><br>
+Nuestro programa de Derecho va más allá del estudio de normas y códigos; forma abogados con capacidad de pensamiento crítico, argumentación jurídica sólida y ética profesional inquebrantable. A lo largo de tu carrera desarrollarás:<br><br>
+<strong>• Derecho Constitucional y Derechos Fundamentales:</strong> Comprenderás la estructura del Estado, los mecanismos de control constitucional y las acciones de tutela que protegen los derechos de todos los ciudadanos ante vulneraciones por parte de entidades públicas.<br><br>
+<strong>• Derecho Civil y Mercantil:</strong> Dominarás las normas que regulan las relaciones entre particulares, desde contratos comerciales complejos hasta derecho de familia, sucesiones y responsabilidad civil.<br><br>
+<strong>• Práctica Litigiosa:</strong> Participarás en nuestra Clínica Jurídica atendiendo casos reales de personas de escasos recursos, litigando ante jueces de tutela y desarrollando habilidades de audiencia bajo la supervisión de abogados experimentados.`,
+    diferenciador: `<strong>Ecosistema Legal de Excelencia</strong><br><br>
+Nuestra Facultad de Derecho se distingue por su Centro de Arbitraje Internacional, donde estudiantes observan casos de arbitraje comercial y de inversión. Contamos con convenios con las firmas de abogados más prestigiosas del país, programas de pasantías en la Corte Constitucional, y profesores que son jueces activos, magistrados de altas cortes y socios de firmas internacionales.`,
+    proyeccion: `<strong>Caminos Profesionales</strong><br><br>
+Como abogado egresado, tu campo de acción es vasto y diverso. Podrás desempeñarte como litigante en derecho penal, corporativo o internacional; aspirar a cargos en la rama judicial como juez o magistrado; especializarte en derecho ambiental, propiedad intelectual o tecnológico; o fundar tu propio bufete especializado. La preparación integral que recibirás te habilita para los concursos de méritos de la rama judicial y las firmas más exigentes.`,
+    cta: 'Descubre si tu vocación es el litigio, la consultoría estratégica o la función judicial. Participa en nuestra Jornada de Puertas Abiertas donde simularás un juicio real con nuestros estudiantes.'
+  },
+  'Administración': {
+    gancho: 'En un mundo donde las empresas nacen y desaparecen en ciclos cada vez más cortos, la capacidad de crear organizaciones resilientes, escalables y capaces de adaptarse al cambio se ha convertido en la habilidad más valiosa del siglo XXI.',
+    vision: `<strong>Formación en Gestión y Negocios</strong><br><br>
+Nuestro programa de Administración forma líderes capaces de tomar decisiones estratégicas basadas en datos, gestionar equipos multidisciplinarios y crear valor sostenible para todas las partes interesadas. Tu formación incluirá:<br><br>
+<strong>• Estrategia Empresarial y Modelos de Negocio:</strong> Aprenderás a diseñar planes estratégicos, analizar mercados competitivos, identificar oportunidades de negocio y estructurar modelos de negocio innovadores que generen ventajas competitivas sostenibles.<br><br>
+<strong>• Finanzas Corporativas y Análisis de Inversión:</strong> Dominarás la interpretación de estados financieros, la evaluación de proyectos de inversión, la gestión de flujos de caja y la estructuración de financiamiento para empresas en diferentes etapas de crecimiento.<br><br>
+<strong>• Marketing Digital y Transformación Digital:</strong> Desarrollarás competencias en marketing analytics, gestión de marca, e-commerce, automatización de procesos de venta y liderazgo de la transformación digital en organizaciones tradicionales.`,
+    diferenciador: `<strong>Ecosistema de Emprendimiento</strong><br><br>
+Nuestra Escuela de Negocios cuenta con la acreditación internacional AACSB, que ostentan menos del 5% de las escuelas de negocios en el mundo. Disponemos de un Trading Room con terminales Bloomberg, incubadora de startups con dos millones de dólares en financiación disponible para proyectos estudiantiles, y un programa de mentores CEOs que acompañan a los estudiantes en el desarrollo de sus ideas de negocio.`,
+    proyeccion: `<strong>Trayectorias de Éxito</strong><br><br>
+Como administrador egresado, podrás desempeñarte como gerente de área en multinacionales, director de operaciones en empresas de tecnología, consultor estratégico en firmas como McKinsey o BCG, fundador de startups escalables, o inversionista en private equity y venture capital. Nuestros egresados ocupan posiciones de liderazgo en empresas del Fortune 500 y han fundado unicornios latinoamericanos.`,
+    cta: 'Tu futuro como líder empresarial comienza con una base académica sólida. Presenta tu idea de negocio y recibe feedback de nuestros inversores en residence. Agenda tu asesoría personalizada hoy.'
+  },
+  'default': {
+    gancho: 'Tu carrera profesional es una decisión que transformará tu vida y la de quienes te rodean. Elegir bien es el primer paso hacia un futuro lleno de propósito y éxito.',
+    vision: 'Nuestro programa te ofrece una formación integral que combina teoría sólida con práctica desde el primer día. Trabajarás en proyectos reales, tendrás acceso a los mejores profesores del país, y desarrollarás habilidades que el mercado laboral demanda activamente.',
+    diferenciador: 'Contamos con instalaciones de última generación, laboratorios especializados, y convenios con las empresas más importantes del sector para que hagas prácticas profesionales. Nuestro enfoque en innovación te prepara para los desafíos del futuro.',
+    proyeccion: 'Nuestros egresados trabajan en las mejores empresas del país y del mundo. Muchos han creado sus propias empresas, otros ocupan posiciones de liderazgo en multinacionales. La red de contactos que construirás aquí te acompañará toda la vida.',
+    cta: 'Agenda tu asesoría personalizada hoy. Nuestros directores de programa te ayudarán a diseñar un plan de estudios que se ajuste a tus metas profesionales. Las plazas son limitadas y las becas de excelencia están disponibles.'
+  }
+};
+
+// Función para generar el email según la carrera
+const generarEmailAsesoramiento = (programa: string, nombreEstudiante: string) => {
+  const contenido = carreraTemplates[programa] || carreraTemplates['default'];
+  
+  return `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Universidad - Admisiones</title>
+  <style>
+    body { 
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+      background-color: #f5f5f5; 
+      margin: 0; 
+      padding: 20px; 
+    }
+    .container { 
+      max-width: 600px; 
+      margin: 0 auto; 
+      background: white; 
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .header { 
+      background: #2c5282; 
+      color: white; 
+      padding: 40px 30px; 
+      text-align: center;
+    }
+    .header h1 {
+      font-size: 28px;
+      margin: 0;
+      font-weight: 600;
+    }
+    .header-subtitle {
+      font-size: 14px;
+      margin-top: 8px;
+      opacity: 0.9;
+    }
+    .content { 
+      padding: 40px 30px; 
+      color: #333;
+    }
+    .saludo {
+      font-size: 18px;
+      font-weight: 600;
+      color: #2c5282;
+      margin-bottom: 25px;
+    }
+    
+    /* Sección 1: Gancho Inicial */
+    .gancho-box {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 25px;
+      border-radius: 8px;
+      margin-bottom: 25px;
+      font-size: 15px;
+      line-height: 1.6;
+    }
+    .gancho-box .section-label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      opacity: 0.8;
+      margin-bottom: 10px;
+    }
+    
+    /* Sección 2: Visión Académica */
+    .vision-box {
+      background: #f7fafc;
+      border-left: 4px solid #2c5282;
+      padding: 25px;
+      margin-bottom: 25px;
+    }
+    .vision-box .section-label {
+      color: #2c5282;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+    .vision-box .section-content {
+      color: #4a5568;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+    
+    /* Sección 3: Diferenciador */
+    .diferenciador-box {
+      background: #fffaf0;
+      border: 2px solid #ed8936;
+      padding: 25px;
+      margin-bottom: 25px;
+      border-radius: 8px;
+    }
+    .diferenciador-box .section-label {
+      color: #c05621;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+    .diferenciador-box .section-content {
+      color: #744210;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+    
+    /* Sección 4: Proyección Laboral */
+    .proyeccion-box {
+      background: #f0fff4;
+      border-left: 4px solid #38a169;
+      padding: 25px;
+      margin-bottom: 25px;
+    }
+    .proyeccion-box .section-label {
+      color: #276749;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+    .proyeccion-box .section-content {
+      color: #22543d;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+    
+    /* Sección 5: CTA */
+    .cta-box {
+      background: #ebf8ff;
+      border: 2px solid #4299e1;
+      padding: 25px;
+      margin-bottom: 25px;
+      border-radius: 8px;
+      text-align: center;
+    }
+    .cta-box .section-label {
+      color: #2b6cb0;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+    .cta-box .section-content {
+      color: #2c5282;
+      font-size: 15px;
+      line-height: 1.6;
+      font-weight: 500;
+    }
+    
+    .button-container {
+      text-align: center;
+      margin: 30px 0;
+    }
+    .button { 
+      display: inline-block; 
+      background: #2c5282; 
+      color: white !important; 
+      padding: 16px 40px; 
+      text-decoration: none; 
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 6px;
+      transition: all 0.3s ease;
+    }
+    .button:hover {
+      background: #1a365d;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(44, 82, 130, 0.3);
+    }
+    .footer { 
+      background: #f7fafc;
+      border-top: 1px solid #e2e8f0;
+      padding: 30px; 
+      text-align: center; 
+    }
+    .footer-brand {
+      font-size: 16px;
+      font-weight: 600;
+      color: #2c5282;
+      margin-bottom: 10px;
+    }
+    .footer-text {
+      font-size: 13px;
+      color: #718096;
+      margin: 5px 0;
+    }
+    .copyright {
+      background: #2c5282;
+      color: white;
+      text-align: center;
+      padding: 20px;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Universidad</h1>
+      <div class="header-subtitle">Admisiones - ${programa}</div>
+    </div>
+    
+    <div class="content">
+      <div class="saludo">Estimado/a ${nombreEstudiante},</div>
+      
+      <!-- Sección 1: Gancho Inicial -->
+      <div class="gancho-box" data-section="gancho">
+        <div class="section-content">${contenido.gancho}</div>
+      </div>
+      
+      <!-- Sección 2: Visión Académica -->
+      <div class="vision-box" data-section="vision">
+        <div class="section-content">${contenido.vision}</div>
+      </div>
+      
+      <!-- Sección 3: Diferenciador -->
+      <div class="diferenciador-box" data-section="diferenciador">
+        <div class="section-content">${contenido.diferenciador}</div>
+      </div>
+      
+      <!-- Sección 4: Proyección Laboral -->
+      <div class="proyeccion-box" data-section="proyeccion">
+        <div class="section-content">${contenido.proyeccion}</div>
+      </div>
+      
+      <!-- Sección 5: CTA -->
+      <div class="cta-box" data-section="cta">
+        <div class="section-content">${contenido.cta}</div>
+      </div>
+      
+      <div class="button-container">
+        <a href="#" class="button">Agendar Asesoría Personalizada</a>
+      </div>
+    </div>
+    
+    <div class="footer">
+      <div class="footer-brand">Dirección de Admisiones</div>
+      <div class="footer-text">📞 (555) 123-4567 | ✉️ admisiones@universidad.edu</div>
+      <div class="footer-text">Estamos aquí para ayudarte a tomar la mejor decisión de tu vida</div>
+    </div>
+    
+    <div class="copyright">
+      © 2024 Universidad. Todos los derechos reservados.
+    </div>
+  </div>
+</body>
+</html>`;
+};
 
 interface Asesoramiento {
   id: string;
@@ -31,6 +358,9 @@ export function AsesoramientoDetailPage() {
   const [enviandoEmail, setEnviandoEmail] = useState(false);
   const [mensajeEmail, setMensajeEmail] = useState('');
   const [templateCargado, setTemplateCargado] = useState(false);
+  const [modalEdicionAbierto, setModalEdicionAbierto] = useState(false);
+  const [mensajeEmailTemporal, setMensajeEmailTemporal] = useState('');
+  const [cargandoTemplate, setCargandoTemplate] = useState(false);
   const [archivos, setArchivos] = useState<File[]>([]);
   const [subiendoArchivos, setSubiendoArchivos] = useState(false);
   const [toast, setToast] = useState<{show: boolean; message: string; type: 'success' | 'error'}>({show: false, message: '', type: 'success'});
@@ -55,7 +385,11 @@ export function AsesoramientoDetailPage() {
     try {
       setLoading(true);
       const response = await axios.get(`${API_URL}/asesoramiento/${id}`);
-      setAsesoramiento(response.data);
+      console.log('[Frontend] Respuesta cargarAsesoramiento:', response.data);
+      
+      // Manejar estructura envuelta en 'data' o directa
+      const responseData = response.data.data || response.data;
+      setAsesoramiento(responseData);
       setError(null);
     } catch (err) {
       console.error('Error al cargar asesoramiento:', err);
@@ -70,11 +404,26 @@ export function AsesoramientoDetailPage() {
       const response = await axios.get(`${API_URL}/asesoramiento/${id}/template-email`);
       if (response.data.contenidoTemplate) {
         setMensajeEmail(response.data.contenidoTemplate);
-        setTemplateCargado(true);
+      } else if (asesoramiento) {
+        // Generar template dinámicamente según la carrera
+        const templateGenerado = generarEmailAsesoramiento(
+          asesoramiento.programa, 
+          `${asesoramiento.nombres} ${asesoramiento.apellidos}`
+        );
+        setMensajeEmail(templateGenerado);
       }
+      setTemplateCargado(true);
     } catch (err) {
       console.error('Error al cargar template:', err);
-      // No mostrar error, el admin puede escribir manualmente
+      // Generar template como fallback
+      if (asesoramiento) {
+        const templateGenerado = generarEmailAsesoramiento(
+          asesoramiento.programa, 
+          `${asesoramiento.nombres} ${asesoramiento.apellidos}`
+        );
+        setMensajeEmail(templateGenerado);
+      }
+      setTemplateCargado(true);
     }
   };
 
@@ -144,7 +493,8 @@ export function AsesoramientoDetailPage() {
 
   const eliminarArchivo = async (nombre: string) => {
     try {
-      await axios.delete(`${API_URL}/asesoramiento/${id}/archivos/${nombre}`);
+      const nombreCodificado = encodeURIComponent(nombre);
+      await axios.delete(`${API_URL}/asesoramiento/${id}/archivos/${nombreCodificado}`);
       showToast('Archivo eliminado exitosamente', 'success');
       cargarAsesoramiento();
     } catch (err) {
@@ -218,7 +568,7 @@ export function AsesoramientoDetailPage() {
                   <Mail className="text-blue-400" size={18} />
                   <span className="text-gray-400 text-sm">Email</span>
                 </div>
-                <p className="text-white">{asesoramiento.email}</p>
+                <p className="text-white">{asesoramiento.email || 'No disponible'}</p>
               </div>
 
               <div className="bg-slate-700/50 p-4 rounded-lg">
@@ -226,7 +576,7 @@ export function AsesoramientoDetailPage() {
                   <Phone className="text-green-400" size={18} />
                   <span className="text-gray-400 text-sm">Teléfono</span>
                 </div>
-                <p className="text-white">{asesoramiento.telefono}</p>
+                <p className="text-white">{asesoramiento.telefono || 'No disponible'}</p>
               </div>
 
               <div className="bg-slate-700/50 p-4 rounded-lg">
@@ -234,7 +584,11 @@ export function AsesoramientoDetailPage() {
                   <MapPin className="text-orange-400" size={18} />
                   <span className="text-gray-400 text-sm">Ubicación</span>
                 </div>
-                <p className="text-white">{asesoramiento.ciudad}, {asesoramiento.pais}</p>
+                <p className="text-white">
+                  {asesoramiento.ciudad && asesoramiento.pais 
+                    ? `${asesoramiento.ciudad}, ${asesoramiento.pais}`
+                    : asesoramiento.ciudad || asesoramiento.pais || 'No disponible'}
+                </p>
               </div>
 
               <div className="bg-slate-700/50 p-4 rounded-lg">
@@ -243,13 +597,16 @@ export function AsesoramientoDetailPage() {
                   <span className="text-gray-400 text-sm">Fecha de solicitud</span>
                 </div>
                 <p className="text-white">
-                  {new Date(asesoramiento.creadoEn).toLocaleDateString('es-CO', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}
+                  {asesoramiento.creadoEn && !isNaN(new Date(asesoramiento.creadoEn).getTime())
+                    ? new Date(asesoramiento.creadoEn).toLocaleDateString('es-CO', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })
+                    : 'Fecha no disponible'
+                  }
                 </p>
               </div>
             </div>
@@ -263,7 +620,7 @@ export function AsesoramientoDetailPage() {
                     <GraduationCap className="text-blue-400" size={18} />
                     <span className="text-gray-400 text-sm">Programa de interés</span>
                   </div>
-                  <p className="text-white font-medium">{asesoramiento.programa}</p>
+                  <p className="text-white font-medium">{asesoramiento.programa || 'No especificado'}</p>
                 </div>
 
                 <div className="bg-slate-700/50 p-4 rounded-lg">
@@ -271,7 +628,7 @@ export function AsesoramientoDetailPage() {
                     <User className="text-cyan-400" size={18} />
                     <span className="text-gray-400 text-sm">Modalidad</span>
                   </div>
-                  <p className="text-white font-medium capitalize">{asesoramiento.modalidad}</p>
+                  <p className="text-white font-medium capitalize">{asesoramiento.modalidad || 'No especificada'}</p>
                 </div>
               </div>
             </div>
@@ -298,22 +655,48 @@ export function AsesoramientoDetailPage() {
               </div>
               
               <div className="space-y-3">
-                <label className="text-gray-400 text-sm">Contenido del Email (puedes editarlo):</label>
-                <textarea
-                  value={mensajeEmail}
-                  onChange={(e) => setMensajeEmail(e.target.value)}
-                  placeholder="Cargando template..."
-                  className="w-full min-h-[200px] bg-slate-700 text-white rounded-lg p-4 border border-slate-600 focus:border-blue-500 focus:outline-none resize-y font-mono text-sm leading-relaxed"
-                />
+                <div className="flex items-center justify-between">
+                  <label className="text-gray-400 text-sm">Contenido del Email:</label>
+                  <button
+                    onClick={() => {
+                      // Generar template según la carrera si no hay mensaje previo
+                      const contenidoAEditar = mensajeEmail || (asesoramiento ? generarEmailAsesoramiento(
+                        asesoramiento.programa, 
+                        `${asesoramiento.nombres} ${asesoramiento.apellidos}`
+                      ) : '');
+                      setMensajeEmailTemporal(contenidoAEditar);
+                      setModalEdicionAbierto(true);
+                    }}
+                    className="flex items-center gap-1 px-3 py-1 rounded-lg text-sm transition bg-blue-600/20 text-blue-400 hover:bg-blue-600/30"
+                  >
+                    <Pencil size={16} />
+                    <span>Editar</span>
+                  </button>
+                </div>
+                
+                {!mensajeEmail && (
+                  <p className="text-gray-500 text-sm italic">Cargando template...</p>
+                )}
 
                 {/* Archivos Adjuntos */}
                 <div className="bg-slate-700/50 rounded-lg p-4 border border-slate-600">
-                  <h4 className="text-white font-medium mb-3 flex items-center gap-2">
-                    <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                    </svg>
-                    Archivos Adjuntos ({asesoramiento.archivos?.filter(a => a.url?.startsWith('http'))?.length || 0})
-                  </h4>
+                  <div className="flex items-center gap-2 mb-3">
+                    <label className="cursor-pointer" title="Agregar archivos">
+                      <input
+                        type="file"
+                        multiple
+                        onChange={subirArchivos}
+                        className="hidden"
+                        disabled={subiendoArchivos}
+                      />
+                      <svg className="w-5 h-5 text-blue-400 hover:text-blue-300 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                      </svg>
+                    </label>
+                    <h4 className="text-white font-medium">
+                      Archivos Adjuntos ({asesoramiento.archivos?.filter(a => a.url?.startsWith('http'))?.length || 0})
+                    </h4>
+                  </div>
                   
                   {/* Lista de archivos existentes - solo con URLs válidas */}
                   {asesoramiento.archivos && asesoramiento.archivos.filter(a => a.url?.startsWith('http')).length > 0 && (
@@ -342,25 +725,7 @@ export function AsesoramientoDetailPage() {
                     </div>
                   )}
 
-                  {/* Input para subir archivos */}
-                  <div className="flex items-center gap-3">
-                    <label className="flex-1 cursor-pointer">
-                      <input
-                        type="file"
-                        multiple
-                        onChange={subirArchivos}
-                        className="hidden"
-                        disabled={subiendoArchivos}
-                      />
-                      <div className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600/20 text-blue-400 rounded-lg hover:bg-blue-600/30 transition border border-dashed border-blue-400">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                        </svg>
-                        {subiendoArchivos ? 'Subiendo...' : 'Agregar archivos'}
-                      </div>
-                    </label>
-                  </div>
-                  <p className="text-gray-500 text-xs mt-2">
+                  <p className="text-gray-500 text-xs">
                     Los archivos se enviarán automáticamente con el email
                   </p>
                 </div>
@@ -427,6 +792,62 @@ export function AsesoramientoDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Modal de Edición de Email */}
+      {modalEdicionAbierto && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="bg-slate-800 rounded-xl shadow-2xl border border-slate-700 w-full max-w-4xl max-h-[90vh] flex flex-col">
+            {/* Header del Modal */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-700">
+              <div>
+                <h3 className="text-lg font-semibold text-white">Editar Contenido del Email</h3>
+                <p className="text-gray-400 text-sm">Programa: {asesoramiento?.programa}</p>
+              </div>
+              <button
+                onClick={() => setModalEdicionAbierto(false)}
+                className="p-2 text-gray-400 hover:text-white hover:bg-slate-700 rounded-lg transition"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Body del Modal - Vista Visual Editable del Email */}
+            <div className="flex-1 overflow-auto p-6 bg-gray-100">
+              <div 
+                ref={(el) => {
+                  if (el) {
+                    el.innerHTML = mensajeEmailTemporal;
+                  }
+                }}
+                contentEditable
+                onInput={(e) => setMensajeEmailTemporal(e.currentTarget.innerHTML)}
+                className="w-full min-h-[400px] bg-white rounded-lg shadow-lg overflow-hidden outline-none"
+                style={{ minHeight: '400px' }}
+              />
+            </div>
+
+            {/* Footer del Modal */}
+            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-700">
+              <button
+                onClick={() => setModalEdicionAbierto(false)}
+                className="px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-500 transition"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => {
+                  setMensajeEmail(mensajeEmailTemporal);
+                  setModalEdicionAbierto(false);
+                }}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+              >
+                <Save size={18} />
+                Guardar Cambios
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

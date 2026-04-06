@@ -392,15 +392,15 @@ export class MailService {
     correo: string,
     asunto: string,
     htmlContent: string,
-    archivos?: { nombre: string; url: string; tipo: string }[],
+    archivos?: { filename: string; content: Buffer }[],
   ) {
     if (!this.isConfigValid || !this.transporter) {
       throw new Error('Configuración de email incompleta. Verifica GMAIL_USER y GMAIL_APP_PASSWORD en .env');
     }
 
     const attachments = archivos?.map((archivo) => ({
-      filename: archivo.nombre,
-      path: archivo.url.startsWith('http') ? archivo.url : `.${archivo.url}`,
+      filename: archivo.filename,
+      content: archivo.content,
     })) || [];
 
     console.log(`📤 [MailService] Enviando email HTML directo:`);
