@@ -45,6 +45,7 @@ import { SolicitudCuentaPage } from './pages/auth/SolicitudCuentaPage';
 import { AspirantePage } from './pages/AspirantePage';
 import { EstudiantePage } from './pages/EstudiantePage';
 import { ProfesorPage } from './pages/ProfesorPage';
+import { EgresadoPage } from './pages/EgresadoPage';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
 function App() {
@@ -61,6 +62,7 @@ function App() {
           <Route path="aspirante" element={<AspirantePage />} />
           <Route path="estudiante" element={<EstudiantePage />} />
           <Route path="profesor" element={<ProfesorPage />} />
+          <Route path="egresado" element={<EgresadoPage />} />
         </Route>
 
         {/* RUTAS AUTH */}

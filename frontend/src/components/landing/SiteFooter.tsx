@@ -32,7 +32,7 @@ export function SiteFooter() {
                 </Link>
               </li>
               <li>
-                <a href="/#pricing" className="hover:text-white">
+                <a href="/home#pricing" className="hover:text-white">
                   Precios
                 </a>
               </li>

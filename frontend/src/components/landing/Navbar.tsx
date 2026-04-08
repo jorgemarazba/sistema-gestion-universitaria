@@ -28,7 +28,7 @@ export function Navbar() {
               {label}
             </NavLink>
           ))}
-          <a href="/#pricing" className={navClass}>
+          <a href="/home#pricing" className={navClass}>
             Pricing
           </a>
         </nav>
