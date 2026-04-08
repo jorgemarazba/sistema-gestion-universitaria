@@ -1,4 +1,4 @@
-import { IsEmail, IsEnum, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsEnum, IsString, MinLength, IsUUID } from 'class-validator';
 
 export class CreateSolicitudDto {
   @IsString()
@@ -25,9 +25,12 @@ export class CreateSolicitudDto {
   })
   tipo_usuario: 'estudiante' | 'docente';
 
+  @IsUUID()
+  programa_id: string;
+
   @IsString()
   @MinLength(10, {
-    message: 'Por favor, describe brevemente tu facultad o área',
+    message: 'Por favor, describe brevemente tu motivo de solicitud',
   })
   motivo: string;
 }

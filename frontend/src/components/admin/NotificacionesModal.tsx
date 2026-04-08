@@ -73,10 +73,6 @@ export function NotificacionesModal({
   onMarcarTodasLeidas,
   contadorPendientes
 }: NotificacionesModalProps) {
-  // Debug
-  console.log('NotificacionesModal - notificaciones:', notificaciones?.length, notificaciones);
-  console.log('NotificacionesModal - contadorPendientes:', contadorPendientes);
-  
   if (!isOpen) return null;
 
   // Separar notificaciones pendientes y leídas

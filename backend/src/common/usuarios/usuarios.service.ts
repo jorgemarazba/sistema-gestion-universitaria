@@ -25,40 +25,51 @@ export class UsuariosService {
   ) {}
 
   async registrarSolicitud(dto: CreateSolicitudDto) {
-    const existe = await this.usuariosRepo.findOne({
-      where: [
-        { documentoIdentidad: dto.documento_identidad },
-        { correoPersonal: dto.correo_personal },
-      ],
-    });
+    try {
+      console.log('[registrarSolicitud] DTO recibido:', dto);
+      
+      const existe = await this.usuariosRepo.findOne({
+        where: [
+          { documentoIdentidad: dto.documento_identidad },
+          { correoPersonal: dto.correo_personal },
+        ],
+      });
 
-    if (existe) {
-      throw new BadRequestException(
-        'Ya existe una solicitud o usuario con estos datos.',
+      if (existe) {
+        throw new BadRequestException(
+          'Ya existe una solicitud o usuario con estos datos.',
+        );
+      }
+
+      const nuevaSolicitud = this.usuariosRepo.create({
+        nombre: dto.nombre,
+        apellido: dto.apellido,
+        documentoIdentidad: dto.documento_identidad,
+        correoPersonal: dto.correo_personal,
+        telefono: dto.telefono,
+        rol: dto.tipo_usuario === 'docente' ? 'profesor' : 'estudiante',
+        motivoSolicitud: dto.motivo,
+        programaId: dto.programa_id,
+        estado: 'pendiente',
+      });
+
+      console.log('[registrarSolicitud] Entidad creada:', nuevaSolicitud);
+
+      const usuarioGuardado = await this.usuariosRepo.save(nuevaSolicitud);
+      console.log('[registrarSolicitud] Usuario guardado:', usuarioGuardado);
+
+      // Crear notificación para admin
+      await this.notificacionesService.notificarNuevaSolicitud(
+        usuarioGuardado.id_usuario,
+        `${dto.nombre} ${dto.apellido}`,
+        dto.tipo_usuario,
       );
+
+      return usuarioGuardado;
+    } catch (error) {
+      console.error('[registrarSolicitud] Error:', error);
+      throw error;
     }
-
-    const nuevaSolicitud = this.usuariosRepo.create({
-      nombre: dto.nombre,
-      apellido: dto.apellido,
-      documentoIdentidad: dto.documento_identidad,
-      correoPersonal: dto.correo_personal,
-      telefono: dto.telefono,
-      rol: dto.tipo_usuario === 'docente' ? 'profesor' : 'estudiante',
-      motivoSolicitud: dto.motivo,
-      estado: 'pendiente',
-    });
-
-    const usuarioGuardado = await this.usuariosRepo.save(nuevaSolicitud);
-
-    // Crear notificación para admin
-    await this.notificacionesService.notificarNuevaSolicitud(
-      usuarioGuardado.id_usuario,
-      `${dto.nombre} ${dto.apellido}`,
-      dto.tipo_usuario,
-    );
-
-    return usuarioGuardado;
   }
 
   async create(createUsuarioDto: CreateUsuarioDto) {

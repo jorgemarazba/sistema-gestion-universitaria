@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import type { ReactNode } from 'react';
 import { CheckCircle, XCircle, X, GraduationCap } from 'lucide-react';
 
@@ -32,14 +33,14 @@ export function useToast(): UseToastReturn {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
-  const ToastContainer = (): ReactNode => (
-    <div className="fixed top-4 right-4 z-50 flex flex-col gap-3">
+  const ToastContainer = (): ReactNode => createPortal(
+    <div className="fixed top-4 right-4 z-[9999] flex flex-col gap-3">
       {toasts.map((toast) => (
         <div
           key={toast.id}
           className={`transform transition-all duration-500 ease-out animate-in slide-in-from-right-4 fade-in ${
-            toast.type === 'success' 
-              ? 'bg-linear-to-r from-blue-600 to-blue-700 border-blue-400' 
+            toast.type === 'success'
+              ? 'bg-linear-to-r from-blue-600 to-blue-700 border-blue-400'
               : 'bg-linear-to-r from-red-600 to-red-700 border-red-400'
           } text-white px-5 py-4 rounded-xl shadow-2xl border-l-4 max-w-md flex items-start gap-3`}
           role="alert"
@@ -55,7 +56,7 @@ export function useToast(): UseToastReturn {
               </div>
             )}
           </div>
-          
+
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-sm leading-tight">
               {toast.type === 'success' ? '¡Éxito!' : 'Error'}
@@ -64,7 +65,7 @@ export function useToast(): UseToastReturn {
               {toast.message}
             </p>
           </div>
-          
+
           <button
             onClick={() => removeToast(toast.id)}
             className="shrink-0 p-1 rounded-lg hover:bg-white/20 transition-colors"
@@ -74,7 +75,8 @@ export function useToast(): UseToastReturn {
           </button>
         </div>
       ))}
-    </div>
+    </div>,
+    document.body
   );
 
   return { toasts, showToast, removeToast, ToastContainer };

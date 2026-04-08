@@ -40,6 +40,9 @@ export class Usuario {
   @Column({ name: 'motivo_solicitud', nullable: true })
   motivoSolicitud: string;
 
+  @Column({ name: 'programa_id', nullable: true })
+  programaId: string;
+
   @Column({ name: 'motivo_rechazo', type: 'text', nullable: true })
   motivoRechazo: string;
 

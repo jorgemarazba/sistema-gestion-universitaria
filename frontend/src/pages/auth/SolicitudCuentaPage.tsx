@@ -1,6 +1,7 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import axios from 'axios'
+import { useState, useEffect } from 'react'
 import {
   ClipboardCheck,
   Mail,
@@ -9,16 +10,28 @@ import {
   ArrowLeft,
   Loader2,
   Phone,
+  BookOpen,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { solicitudSchema, type SolicitudFormValues } from './SolicitudCuenta.schema'
+import { useToast } from '../../hooks/useToast'
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3003/api/v1'
+
+interface Programa {
+  id: string;
+  nombre: string;
+  facultad: string;
+}
 
 const inputClass =
   'w-full rounded-lg border border-slate-600/80 bg-slate-900/60 py-2.5 pl-10 pr-4 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/25'
 
 export const SolicitudCuentaPage = () => {
+  const { showToast, ToastContainer } = useToast()
+  const [programas, setProgramas] = useState<Programa[]>([])
+  const [cargandoProgramas, setCargandoProgramas] = useState(true)
+  
   const {
     register,
     handleSubmit,
@@ -29,18 +42,37 @@ export const SolicitudCuentaPage = () => {
     mode: 'onTouched',
   })
 
+  // Cargar programas/carreras disponibles
+  useEffect(() => {
+    const cargarProgramas = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/programas`)
+        const data = response.data
+        // Manejar diferentes formatos de respuesta
+        const programasData = Array.isArray(data) ? data : data.data || data.programas || []
+        setProgramas(programasData)
+      } catch (err) {
+        console.error('Error cargando programas:', err)
+      } finally {
+        setCargandoProgramas(false)
+      }
+    }
+    cargarProgramas()
+  }, [])
+
   const onSubmit = async (data: SolicitudFormValues) => {
     try {
       await axios.post(`${API_URL}/usuarios/solicitar-acceso`, data)
-      alert(
+      showToast(
         'Solicitud enviada con éxito. Revisaremos tus datos y te enviaremos el correo institucional a tu email personal en 24 a 48 horas.',
+        'success'
       )
     } catch (err: unknown) {
       const msg =
         axios.isAxiosError(err) && err.response?.data?.message
           ? err.response.data.message
           : 'Error al enviar la solicitud. Intenta de nuevo.'
-      alert(msg)
+      showToast(msg, 'error')
     }
   }
 
@@ -112,7 +144,6 @@ export const SolicitudCuentaPage = () => {
                   </label>
                   <input
                     id="nombre"
-                    name="nombre"
                     autoComplete="given-name"
                     {...register('nombre')}
                     className={inputClass}
@@ -130,7 +161,6 @@ export const SolicitudCuentaPage = () => {
                   </label>
                   <input
                     id="apellido"
-                    name="apellido"
                     autoComplete="family-name"
                     {...register('apellido')}
                     className={inputClass}
@@ -155,7 +185,6 @@ export const SolicitudCuentaPage = () => {
                   />
                   <input
                     id="documento_identidad"
-                    name="documento_identidad"
                     {...register('documento_identidad')}
                     className={inputClass}
                     placeholder="Cédula o pasaporte"
@@ -179,7 +208,6 @@ export const SolicitudCuentaPage = () => {
                   />
                   <input
                     id="correo_personal"
-                    name="correo_personal"
                     type="email"
                     autoComplete="email"
                     {...register('correo_personal')}
@@ -205,7 +233,6 @@ export const SolicitudCuentaPage = () => {
                   />
                   <input
                     id="telefono"
-                    name="telefono"
                     type="tel"
                     autoComplete="tel"
                     {...register('telefono')}
@@ -226,7 +253,6 @@ export const SolicitudCuentaPage = () => {
                 </label>
                 <select
                   id="tipo_usuario"
-                  name="tipo_usuario"
                   {...register('tipo_usuario')}
                   className={`${inputClass} appearance-none`}
                 >
@@ -241,16 +267,45 @@ export const SolicitudCuentaPage = () => {
               </div>
 
               <div>
+                <label htmlFor="programa_id" className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-400">
+                  Carrera / Programa de interés *
+                </label>
+                <div className="relative">
+                  <BookOpen
+                    className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-500"
+                    aria-hidden
+                  />
+                  <select
+                    id="programa_id"
+                    {...register('programa_id')}
+                    disabled={cargandoProgramas}
+                    className={`${inputClass} appearance-none pl-10 ${cargandoProgramas ? 'opacity-60 cursor-not-allowed' : ''}`}
+                  >
+                    <option value="">{cargandoProgramas ? 'Cargando carreras...' : 'Selecciona una carrera'}</option>
+                    {programas.map((programa) => (
+                      <option key={programa.id} value={programa.id}>
+                        {programa.nombre} - {programa.facultad}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {errors.programa_id && (
+                  <p className="mt-1.5 text-xs text-rose-400">
+                    {errors.programa_id.message}
+                  </p>
+                )}
+              </div>
+
+              <div>
                 <label htmlFor="motivo" className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-400">
-                  Facultad / motivo de solicitud
+                  Motivo de solicitud / Observaciones
                 </label>
                 <textarea
                   id="motivo"
-                  name="motivo"
                   {...register('motivo')}
                   rows={3}
                   className={`${inputClass} resize-none pt-3`}
-                  placeholder="Ej: Facultad de Ingeniería - Nuevo ingreso 2026"
+                  placeholder="Describe brevemente por qué deseas unirte a nuestra universidad..."
                 />
                 {errors.motivo && (
                   <p className="mt-1.5 text-xs text-rose-400">
@@ -280,6 +335,7 @@ export const SolicitudCuentaPage = () => {
           </div>
         </div>
       </div>
+      <ToastContainer />
     </div>
   )
 }

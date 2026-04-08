@@ -7,7 +7,8 @@ export const solicitudSchema = z.object({
   correo_personal: z.string().email('Ingresa un correo personal válido'),
   telefono: z.string().min(10, 'Teléfono no válido'),
   tipo_usuario: z.enum(['estudiante', 'docente']),
-  motivo: z.string().min(10, 'Por favor, describe brevemente tu facultad o área'),
+  programa_id: z.string().min(1, 'Debes seleccionar una carrera'),
+  motivo: z.string().min(10, 'Por favor, describe brevemente tu motivo de solicitud'),
 })
 
 export type SolicitudFormValues = z.infer<typeof solicitudSchema>
